@@ -2,9 +2,11 @@ import os
 import pathlib
 import random
 
+#settings, seed, difficulty, normal cards, special cards
+
 #get the programs path
 ownPath = pathlib.Path().resolve()
-def createConfig(ownPath):
+def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
     if os.path.isfile(f"{ownPath}/Config.ini"):
         settings = open(f"{ownPath}/Config.ini", "r+")
@@ -19,9 +21,11 @@ def createConfig(ownPath):
         settings.write("\n#\n#\n#BE AWARE THAT \"True\" AND \"False\" NEED TO HAVE THE FIRST LETTER CAPITALIZED\n#\n#")
         settings.write("\n#if you want to use a seed, put it here, else, make it False\nFalse")
         settings.write("\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise")
+        settings.write("\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 2\n2")
+        settings.write("\n#choose the amount of special cards (4 by default)\n4")
     settings.close()
 
-def readConfig():
+def readConfig():#reads the config file lines and ignores # lines
     #check the settings
     settings = open(f"{ownPath}/Config.ini", "r")
     settingsNotSplitted = settings.read()
@@ -32,36 +36,52 @@ def readConfig():
     settingsWithoutComments = list()
     #for all lines, if the line starts with a # ignore it, else, add it to the list with settings
     for x in range(len(settingsSplitted)):
+        if settingsSplitted[x][0] != "#":
+                settingsWithoutComments.append(settingsSplitted[x])
         try:
-            if settingsSplitted[x][0] != "#" and settingsSplitted[x][1] != "#":
+            if settingsSplitted[x][0] != "#":
                 settingsWithoutComments.append(settingsSplitted[x])
         except:
             input(f"There is a problem with \"{ownPath}/Config.ini\" Go fix it, or Delete it\nPress Enter to close")
             exit()
     return settingsWithoutComments
 
-def rawSettingsToSettings(rawSettings):
-    gamemodeList = ["Easy", "Normal", "Impossible", "Exercise"]
-    settings = [False, "Exercise"]
-    if rawSettings[0] == "False":#check if seed in entered
-        settings[0] = False
-    else:
-        settings[0] = stringToSeed(rawSettings[0])
-    if rawSettings[1] not in gamemodeList:#check difficulty
-        settings[1] = "Exercise"
-    else:
-        match rawSettings[1]: #select chosen difficulty
-            case 'Easy':
-                settings[1] = "Easy"
-            case 'Normal':
-                settings[1] = "Normal"
-            case 'Impossible':        
-                settings[1] = "Impossible"
-            case 'Exercise':        
-                settings[1] = "Exercise"
-    return settings
+def rawSettingsToSettings(rawSettings): #turns settings into settings the program can use
+    try:
+        gamemodeList = ["Easy", "Normal", "Impossible", "Exercise"]
+        settings = [False, "Exercise"]
+        if rawSettings[0] == "False":#check if seed in entered
+            settings[0] = False
+        else:
+            settings[0] = stringToSeed(rawSettings[0])
+        if rawSettings[1] not in gamemodeList:#check difficulty
+            settings[1] = "Exercise"
+        else:
+            match rawSettings[1]: #select chosen difficulty
+                case 'Easy':
+                    settings[1] = "Easy"
+                case 'Normal':
+                    settings[1] = "Normal"
+                case 'Impossible':        
+                    settings[1] = "Impossible"
+                case 'Exercise':        
+                    settings[1] = "Exercise"
+        if rawSettings[2] != "":#check amount of normal cards
+            try:
+                settings.append(int(rawSettings[2]))
+            except:
+                settings.append(2)
+        if rawSettings[3] != "":#check amount of special cards
+            try:
+                settings.append(int(rawSettings[3]))
+            except:
+                settings.append(4)
+        return settings
+    except:
+        input(f"There is a problem with \"{ownPath}/Config.ini\" Go fix it, or Delete it\nPress Enter to close")
+        exit()
 
-def stringToSeed(string):
+def stringToSeed(string): #turns everything into ther ASCII value
     seedList = []
     for x in string:
         seedList.append(ord(x))#change every character into its ASCII value
@@ -69,9 +89,24 @@ def stringToSeed(string):
     seed = int(seedString)
     return seed
 
+def setupCardPile(color, types, special, settings): #shuffles and creates card deck
+    unShuffledCardPile = list()
+    cardPile = list()
+    for y in range(settings[2]):#creates amount of color cards
+        for x in range(len(color)):
+            for i in range(len(types)):
+                unShuffledCardPile.append(f"{color[x]} {types[i]}")
+    for z in range(settings[3]):#creates special cards
+        for x in range(len(special)):
+            unShuffledCardPile.append(f"{special[x]}")
+    print(unShuffledCardPile)
+
 createConfig(ownPath)
 setting = rawSettingsToSettings(readConfig())
 if setting[0] != False: random.seed(setting[0])#set seed if seed in config
 
-cardTypes = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'draw two', 'reverse']
-cardColors = ["red", 'blue', 'green', 'yellow']
+cardTypes = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'draw two', 'reverse']#all types of cards with a color
+cardColors = ["red", 'blue', 'green', 'yellow']#all colors
+specials = ["wild", 'draw four']#the special cards
+
+cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
