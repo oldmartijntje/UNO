@@ -4,6 +4,15 @@ import random
 
 #settings, seed, difficulty, normal cards, special cards
 
+class player(): #player and computer
+    def __init__(self, userName, cardsDeck, statusEffects, memory) -> None:
+        self.name = userName
+        self.cards = cardsDeck
+        self.effect = statusEffects
+        self.memory = memory
+
+
+
 #get the programs path
 ownPath = pathlib.Path().resolve()
 def createConfig(ownPath):#creates the config file
@@ -90,23 +99,26 @@ def stringToSeed(string): #turns everything into ther ASCII value
     return seed
 
 def setupCardPile(color, types, special, settings): #shuffles and creates card deck
-    unShuffledCardPile = list()
     cardPile = list()
     for y in range(settings[2]):#creates amount of color cards
         for x in range(len(color)):
             for i in range(len(types)):
-                unShuffledCardPile.append(f"{color[x]} {types[i]}")
+                cardPile.append(f"{color[x]} {types[i]}")
     for z in range(settings[3]):#creates special cards
         for x in range(len(special)):
-            unShuffledCardPile.append(f"{special[x]}")
-    print(unShuffledCardPile)
+            cardPile.append(f"{special[x]}")
+    random.shuffle(cardPile)
+    return cardPile
 
+#config thingys
 createConfig(ownPath)
 setting = rawSettingsToSettings(readConfig())
 if setting[0] != False: random.seed(setting[0])#set seed if seed in config
 
+#basic settings
 cardTypes = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'draw two', 'reverse']#all types of cards with a color
 cardColors = ["red", 'blue', 'green', 'yellow']#all colors
 specials = ["wild", 'draw four']#the special cards
 
+#creating a game
 cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
