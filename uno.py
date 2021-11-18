@@ -2,23 +2,25 @@ import os
 import pathlib
 import random
 
-#settings, seed, difficulty, normal cards, special cards
+#settings: seed0, difficulty1, normal cards2, special cards3, player amount4, starting cards5
 
 class player(): #player and computer
-    def __init__(self, userName, cardsDeck, statusEffects, memory) -> None:
+    def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory) -> None:
         self.name = userName
         self.cards = cardsDeck
         self.effect = statusEffects
         self.memory = memory
+        self.type = playerOrComputer
 
 #tells u there is a problem with your config
-def pleaseFixTheConfigFile(exception):
+def pleaseFixTheConfigFile(exception = ""):
     input(f"There is a problem with \"{ownPath}/Config.ini\" Go fix it, or Delete it\nPress Enter to close")
     print(exception)
     exit()
 
 #get the programs path
 ownPath = pathlib.Path().resolve()
+
 def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
     if os.path.isfile(f"{ownPath}/Config.ini"):
@@ -36,6 +38,8 @@ def createConfig(ownPath):#creates the config file
         settings.write("\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise")
         settings.write("\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1")
         settings.write("\n#choose the amount of special cards (4 by default)\n4")
+        settings.write("\n#choose the amount of Players 2-10 (per set of cards) (4 by default)\n4")
+        settings.write("\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
     settings.close()
 
 def readConfig():#reads the config file lines and ignores # lines
@@ -77,17 +81,24 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
                 case 'Exercise':        
                     settings[1] = "Exercise"
         if rawSettings[2] != "":#check amount of normal cards
-            try:
-                settings.append(int(rawSettings[2]))
-            except Exception as e:
-                pleaseFixTheConfigFile(e)
+            settings.append(int(rawSettings[2]))
+        else:
+            pleaseFixTheConfigFile()
         if rawSettings[3] != "":#check amount of special cards
-            try:
-                settings.append(int(rawSettings[3]))
-            except Exception as e:
-                pleaseFixTheConfigFile(e)
+            settings.append(int(rawSettings[3]))
+        else:
+            pleaseFixTheConfigFile()
+        
+        settings.append(int(rawSettings[4])) #set amount of players
+        if settings[4] > 9*settings[2] or settings[4] < 1:
+            settings[4] = 3
+
+        settings.append(int(rawSettings[5])) #set amount of starting cards
+
+
         return settings
     except Exception as e:
+        print(settings)
         pleaseFixTheConfigFile(e)
 
 def stringToSeed(string): #turns everything into ther ASCII value
@@ -110,7 +121,7 @@ def setupCardPile(color, types, special, settings): #shuffles and creates card d
     random.shuffle(cardPile)
     return cardPile
 
-def cardIdToName(ID):
+def cardIdToName(ID):#input the card id: 1.6 and turns it into blue 6
     card = ""
     splitted = ID.split(".")
     splitted[0] = int(splitted[0])
@@ -121,24 +132,53 @@ def cardIdToName(ID):
         card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
     return card
 
+def givePeoplePlayingCards(players, cards, settings):#give people starting amount of playing cards
+    for x in range(len(players)):
+        for y in range(setting[5]):
+            players[x].cards.append(cards[0])
+            cards.pop(0)
+    return players, cards
+
+
+
 #config thingys
 createConfig(ownPath)
 setting = rawSettingsToSettings(readConfig())
 if setting[0] != False: random.seed(setting[0])#set seed if seed in config
 
-print(setting)
 
 #basic settings
-cardTypes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12]#all types of cards with a color 0-9 numbers, 10 skip, 11 +2, 12 reverse
+cardTypes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12]#1 deck of color cards per color
+#all types of cards with a color 0-9 numbers, 10 skip, 11 +2, 12 reverse
 cardTypesNames = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'draw two', 'reverse']
 cardColors = [0, 1, 2, 3, 4]#all colors, special, red, blue, green, yellow
 cardColorsNames = ["red", 'blue', 'green', 'yellow', 'black']
 specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
+computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]']
 
 #creating a game
+peopleInPlayerList = 1
+playerList = list()
 cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
-print(cardDeck)
-for x in range(len(cardDeck)):
-    cardDeck[x] = cardIdToName(cardDeck[x])
-print(cardDeck)
+playerDirection = 1
+playerList.append(player(1, "marjin", [], "", []))
+
+for i in range(setting[4]- peopleInPlayerList):
+    if setting[1] != "Exercise":
+        if random.randint(0, 100) == 5:
+            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "colorblind", []))
+        else:
+            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", []))
+        if playerList[i].name == "thomas":
+            playerList[i].effect = "colorblind"
+    else:
+        playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", []))
+
+playerList, cardDeck = givePeoplePlayingCards(playerList, cardDeck, setting)
+activePlayer = random.randint(0, len(playerList)-1)
+
+if playerList[activePlayer].type == 1:
+    pass
+else:
+    pass
