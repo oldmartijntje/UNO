@@ -5,12 +5,13 @@ import random
 #settings: seed0, difficulty1, normal cards2, special cards3, player amount4, starting cards5
 
 class player(): #player and computer
-    def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory) -> None:
+    def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory, playerNumber) -> None:
         self.name = userName
         self.cards = cardsDeck
         self.effect = statusEffects
         self.memory = memory
         self.type = playerOrComputer
+        self.number = playerNumber
 
 #tells u there is a problem with your config
 def pleaseFixTheConfigFile(exception = ""):
@@ -20,6 +21,19 @@ def pleaseFixTheConfigFile(exception = ""):
 
 #get the programs path
 ownPath = pathlib.Path().resolve()
+
+
+def clear_console(): # clear the console
+    try:
+        os.system('cls')
+    except:
+        try:
+            os.system('clear')
+        except:
+            e = 0
+
+def takeCardFromDeck(amount, cards):#grab the amount of cards and add it to your deck
+    pass
 
 def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
@@ -32,14 +46,16 @@ def createConfig(ownPath):#creates the config file
     #create .settings.txt
     else:
         settings = open(f"{ownPath}/Config.ini", "x")
-        settings.write("#if you leave empty lines, or with other characters(unless the line starts with #, then it is okay), the program will choose by itself")
-        settings.write("\n#\n#\n#BE AWARE THAT \"True\" AND \"False\" NEED TO HAVE THE FIRST LETTER CAPITALIZED\n#\n#")
-        settings.write("\n#if you want to use a seed, put it here, else, make it False\nFalse")
-        settings.write("\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise")
-        settings.write("\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1")
-        settings.write("\n#choose the amount of special cards (4 by default)\n4")
-        settings.write("\n#choose the amount of Players 2-10 (per set of cards) (4 by default)\n4")
-        settings.write("\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
+        settings.write("#if you leave empty lines, or with other characters(unless the line starts with #, then it is okay), the program will choose by itself"+
+"\n#\n#\n#BE AWARE THAT \"True\" AND \"False\" NEED TO HAVE THE FIRST LETTER CAPITALIZED\n#\n#"+
+"\n#if you want to use a seed, put it here, else, make it False\nFalse"+
+"\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise"+
+"\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1"+
+"\n#choose the amount of special cards (4 by default)\n4"+
+"\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
+"\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
+"\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
+"\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
     settings.close()
 
 def readConfig():#reads the config file lines and ignores # lines
@@ -91,9 +107,21 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         
         settings.append(int(rawSettings[4])) #set amount of players
         if settings[4] > 9*settings[2] or settings[4] < 1:
-            settings[4] = 3
+            settings[4] = 1
 
-        settings.append(int(rawSettings[5])) #set amount of starting cards
+        settings.append(int(rawSettings[5])) #set amount of computer players
+        if settings[5] + settings[4] > 9*settings[2] or settings[4] + settings[4] < 2:
+            settings[5] = 3
+
+        print(rawSettings)
+
+        settings.append(rawSettings[6])
+        if rawSettings[6] == "False":#check if they want names
+            settings[6] = False
+        else:
+            settings[6] = True
+
+        settings.append(int(rawSettings[7])) #set amount of starting cards
 
 
         return settings
@@ -139,7 +167,51 @@ def givePeoplePlayingCards(players, cards, settings):#give people starting amoun
             cards.pop(0)
     return players, cards
 
-
+def playerTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer):
+    stackedPlusCards = 0
+    player.cards.append("0.11")
+    playedCards.append("0.11")
+    lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
+    if settings[4] > 1:
+        clear_console()
+        input(f"it's player number {player.number}, {player.name} their turn\nPress the enter button to play\n")
+        print(f"The last player played {lastPlayedCard}")
+    lastPlayedCardID = playedCards[len(playedCards)-1]
+    if lastPlayedCardID.split(".")[0] == '4' and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
+        stackedPlusCards += 4
+    elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
+        stackedPlusCards += 2
+    if stackedPlusCards > 0:#if it was a + card, check how many of them are stacked
+        check = 1
+        for x in range(2, len(playedCards)):
+            if check == 1:
+                if playedCards[len(playedCards-x)].split(".")[0] == 4 and playedCards[len(playedCards-x)].split(".")[1] == 1:#check if it is a +2 card
+                    stackedPlusCards += 4
+                elif playedCards[len(playedCards-x)].split(".")[1] == 11:#check if it is a +4 card
+                    stackedPlusCards += 2
+                else:
+                    check = 0
+    yourAmountPlusCards = [0, 0]
+    if stackedPlusCards > 0:
+        for x in range(len(player.cards)): #check if you have any + card to counter
+            if player.cards[x].split(".")[0] == '4' and player.cards[x].split(".")[1] == '1':
+                yourAmountPlusCards[1] += 1
+            elif player.cards[x].split(".")[1] == '11':
+                yourAmountPlusCards[0] += 1
+        if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
+            player.cards.append(takeCardFromDeck(stackedPlusCards, cards))
+        else:
+            while True:
+                answer = input(f"there are + cards stacked upto +{stackedPlusCards}, you have {yourAmountPlusCards[0]} +2 cards and {yourAmountPlusCards[1]} +4 cards"+
+                f"\nDo you want to use one of your + cards? or do you want to take {stackedPlusCards} cards from the pile?\nplay + card (1)\ntake cards (2)\n>>>")
+                if answer not in ["1", '2']:
+                    print("sorry, we didn't get that, please try again")
+                else:
+                    if answer == '2':
+                        player.cards.append(takeCardFromDeck(stackedPlusCards, cards))
+                        break
+                    else:
+                        pass       
 
 #config thingys
 createConfig(ownPath)
@@ -155,30 +227,48 @@ cardColors = [0, 1, 2, 3, 4]#all colors, special, red, blue, green, yellow
 cardColorsNames = ["red", 'blue', 'green', 'yellow', 'black']
 specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
-computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]']
+computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
+'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
+'Ms.Kittens', 'attack helicopter', 'shell', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris']
+colorblindNames = ['thomas', 'george', 'colorblind guy']
 
-#creating a game
-peopleInPlayerList = 1
+#creating players
 playerList = list()
-cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
-playerDirection = 1
-playerList.append(player(1, "marjin", [], "", []))
+for i in range(setting[4]):
+    if setting[6] == True:
+        while True:
+            playerName = input(f"hello player number {len(playerList)}, what is your name?\n>>>")
+            if playerName != "":
+                playerList.append(player(1, playerName, [], "", [], len(playerList)))
+                if playerList[i].name.lower() in colorblindNames:
+                    playerList[i].effect = "colorblind"
+                break
+    else:
+        playerList.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", [], len(playerList)))
+        if playerList[i].name.lower() in colorblindNames:
+            playerList[i].effect = "colorblind"
+    
 
-for i in range(setting[4]- peopleInPlayerList):
+for i in range(setting[5]):
     if setting[1] != "Exercise":
         if random.randint(0, 100) == 5:
-            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "colorblind", []))
+            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "colorblind", [], len(playerList)))
         else:
-            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", []))
-        if playerList[i].name == "thomas":
+            playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", [], len(playerList)))
+        if playerList[i].name.lower() in colorblindNames.lower():
             playerList[i].effect = "colorblind"
     else:
-        playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", []))
+        playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], "", [], len(playerList)))
 
+#creating a game
+cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
+playedCardsPile = [cardDeck[0]]#start card
+cardDeck.pop(0)#remove start card from cards list
+playerDirection = 1
 playerList, cardDeck = givePeoplePlayingCards(playerList, cardDeck, setting)
 activePlayer = random.randint(0, len(playerList)-1)
 
 if playerList[activePlayer].type == 1:
-    pass
+    playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer)
 else:
     pass
