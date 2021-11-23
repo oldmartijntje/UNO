@@ -3,6 +3,9 @@ import pathlib
 import random
 import time
 
+historyOfCards = list()
+historyPlayersThatPlayedACard = list()
+
 #settings: seed0, difficulty1, normal cards2, special cards3, player amount4, starting cards5
 
 class player(): #player and computer
@@ -45,6 +48,7 @@ def clear_console(): # clear the console
 
 def takeCardFromDeck(amount, card, played):#grab the amount of cards and add it to your deck
     gift = list()
+    print(f"you drew {amount} cards:")
     for x in range(amount):
         if len(card) > 1:
             gift.append(card[0])
@@ -163,12 +167,12 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
     cardsInDeckString = ""
     for x in range(len(player.cards)):#show all your cards
         cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
-    print(f"what card do you want to play? (say 0 to grab a card from the pile)\n{cardsInDeckString}")
+    print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
     loop = True
     while loop == True:
         try:
             numberCard = int(input())
-            if numberCard > -1 and numberCard <= len(player.cards):#if he chose an existing card
+            if numberCard > -5 and numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
                     if (playedCards[len(playedCards)-1].split(".")[0] == "4" and playedCards[len(playedCards)-1].split(".")[1] == "1") or (playedCards[len(playedCards)-1].split(".")[1] == "11" and playedCards[len(playedCards)-1].split(".")[0] != "4"):
                         win.append("+")
@@ -176,6 +180,21 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                     for x in range(len(cardsForPlayer)):
                         player.cards.append(cardsForPlayer[x])
                     loop = False
+                    historyOfCards.append("nothing, he grabbed a card")
+                elif numberCard == -1:
+                    print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options")
+                elif numberCard == -2:
+                    for x in range(len(playerList)):
+                        print(f"player {x}, {playerList[x].name} has {len(playerList[x].cards)} cards")
+                elif numberCard == -3:
+                    for x in range(len(historyOfCards)):
+                        print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
+                elif numberCard == -4:
+                    print(f"The last player played {lastPlayedCard}")
+                    cardsInDeckString = ""
+                    for x in range(len(player.cards)):#show all your cards
+                        cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
+                    print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -188,6 +207,8 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                             elif player.cards[numberCard].split(".")[1] == "10":#check for skip card
                                 playingDirection = playingDirection * 2
                             player.cards.pop(numberCard)
+                            print(f"you played {cardIdToName(playedCards[len(playedCards)-1])}")
+                            historyOfCards.append(cardIdToName(playedCards[len(playedCards)-1]))
                             loop = False
                             if len(player.cards) == 0:#check if someone has won
                                 win[0] = True
@@ -197,6 +218,8 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                     else:# play the wild or +4 card
                         playedCards.append(player.cards[numberCard])
                         player.cards.pop(numberCard)
+                        print(f"you played {cardIdToName(playedCards[len(playedCards)-1])}")
+                        historyOfCards.append(cardIdToName(playedCards[len(playedCards)-1]))
                         loop = False
             else:
                 print("you don't have a card in that slot")
@@ -275,17 +298,17 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
             cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
-            player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+            player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win)
         else:
             cardsInDeckString = ""
             for x in range(len(player.cards)):#show all your cards
                 cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
-            print(f"what card do you want to play? (say 0 to grab the cards from the pile)\n{cardsInDeckString}")
+            print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
             loop = True
             while loop == True:
                 try:
                     numberCard = int(input())
-                    if numberCard > -1 and numberCard <= len(player.cards ):#check if it's a card you have
+                    if numberCard > -5 and numberCard <= len(player.cards ):#check if it's a card you have
                         if numberCard == 0:
                             if (playedCards[len(playedCards)-1].split(".")[0] == "4" and playedCards[len(playedCards)-1].split(".")[1] == "1") or (playedCards[len(playedCards)-1].split(".")[1] == "11" and playedCards[len(playedCards)-1].split(".")[0] != "4"):
                                 win.append("+")
@@ -293,23 +316,42 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                             for x in range(len(cardsForPlayer)):
                                 player.cards.append(cardsForPlayer[x])
                             loop = False
+                            historyOfCards.append("nothing, he grabbed a card")
+                        elif numberCard == -1:
+                            print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options")
+                        elif numberCard == -2:
+                            for x in range(len(playerList)):
+                                print(f"player {x}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
+                        elif numberCard == -3:
+                            for x in range(len(historyOfCards)):
+                                print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
+                        elif numberCard == -4:
+                            print(f"The last player played {lastPlayedCard}")
+                            cardsInDeckString = ""
+                            for x in range(len(player.cards)):#show all your cards
+                                cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
+                                print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
                         else:
                             numberCard -= 1
                             if player.cards[numberCard].split(".")[0] == '4' and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
                                 playedCards.append(player.cards[numberCard])
+                                print(f"you played {cardIdToName(playedCards[len(playedCards)-1])}")#show what you have played
+                                historyOfCards.append(cardIdToName(playedCards[len(playedCards)-1]))
                                 player.cards.pop(numberCard)
                                 loop = False
                             elif player.cards[numberCard].split(".")[1] == '11':#check if it is a +2 card
                                 playedCards.append(player.cards[numberCard])
+                                print(f"you played {cardIdToName(playedCards[len(playedCards)-1])}")#show what you have played
+                                historyOfCards.append(cardIdToName(playedCards[len(playedCards)-1]))
                                 player.cards.pop(numberCard)
                                 loop = False
                             else:
                                 print("\nthe last player played a + card so we will grab your cards first, then you can choose which one to play\n")#get cards
                                 time.sleep(3)
                                 cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
-                                for x in range(len(cardsForPlayer)):
+                                for x in range(len(cardsForPlayer)):#add cards to his deck
                                     player.cards.append(cardsForPlayer[x])
-                                player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+                                player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win)
                                 loop = False
                     else:
                         print("that is not a card you have")
@@ -319,6 +361,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
     else:
         player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win)
     input(f"that was your turn {player.name}\npress enter so the next player can play\n")
+    historyPlayersThatPlayedACard.append(player.name)
     return cards, playedCards, playerList, settings, playingDirection, activePlayer, win
                 
                            
