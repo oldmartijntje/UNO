@@ -13,8 +13,8 @@ class player(): #player and computer
         self.type = playerOrComputer
         self.number = playerNumber
 
-#tells u there is a problem with your config
-def pleaseFixTheConfigFile(exception = ""):
+
+def pleaseFixTheConfigFile(exception = ""):#tells u there is a problem with your config
     input(f"There is a problem with \"{ownPath}/Config.ini\" Go fix it, or Delete it\nPress Enter to close")
     print(exception)
     exit()
@@ -32,8 +32,21 @@ def clear_console(): # clear the console
         except:
             e = 0
 
-def takeCardFromDeck(amount, cards):#grab the amount of cards and add it to your deck
-    pass
+def takeCardFromDeck(amount, cards, playedPile):#grab the amount of cards and add it to your deck
+    gift = list()
+    for x in range(amount):
+        if len(cards) > 1:
+            gift.append(cards[0])
+            cards.pop(0)
+        else:#add the played pile to the new cards
+            placeholderList = list()
+            for y in range(1, len(playedPile)):
+                placeholderList.append(playedPile[y])
+            random.shuffle(placeholderList)
+            cards.append(placeholderList)
+
+            gift.append(cards[0])
+            cards.pop(0)
 
 def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
@@ -47,15 +60,15 @@ def createConfig(ownPath):#creates the config file
     else:
         settings = open(f"{ownPath}/Config.ini", "x")
         settings.write("#if you leave empty lines, or with other characters(unless the line starts with #, then it is okay), the program will choose by itself"+
-"\n#\n#\n#BE AWARE THAT \"True\" AND \"False\" NEED TO HAVE THE FIRST LETTER CAPITALIZED\n#\n#"+
-"\n#if you want to use a seed, put it here, else, make it False\nFalse"+
-"\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise"+
-"\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1"+
-"\n#choose the amount of special cards (4 by default)\n4"+
-"\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
-"\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
-"\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
-"\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
+    "\n#\n#\n#BE AWARE THAT \"True\" AND \"False\" NEED TO HAVE THE FIRST LETTER CAPITALIZED\n#\n#"+
+    "\n#if you want to use a seed, put it here, else, make it False\nFalse"+
+    "\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise"+
+    "\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1"+
+    "\n#choose the amount of special cards (4 by default)\n4"+
+    "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
+    "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
+    "\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
+    "\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
     settings.close()
 
 def readConfig():#reads the config file lines and ignores # lines
@@ -129,6 +142,9 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         print(settings)
         pleaseFixTheConfigFile(e)
 
+def chooseCard():
+    pass
+
 def stringToSeed(string): #turns everything into ther ASCII value
     seedList = []
     for x in string:
@@ -172,7 +188,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
     player.cards.append("0.11")
     playedCards.append("0.11")
     lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
-    if settings[4] > 1:
+    if settings[4] > 1: #only if it's not singleplayer
         clear_console()
         input(f"it's player number {player.number}, {player.name} their turn\nPress the enter button to play\n")
         print(f"The last player played {lastPlayedCard}")
@@ -199,19 +215,10 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
             elif player.cards[x].split(".")[1] == '11':
                 yourAmountPlusCards[0] += 1
         if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
-            player.cards.append(takeCardFromDeck(stackedPlusCards, cards))
+            cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
         else:
             while True:
-                answer = input(f"there are + cards stacked upto +{stackedPlusCards}, you have {yourAmountPlusCards[0]} +2 cards and {yourAmountPlusCards[1]} +4 cards"+
-                f"\nDo you want to use one of your + cards? or do you want to take {stackedPlusCards} cards from the pile?\nplay + card (1)\ntake cards (2)\n>>>")
-                if answer not in ["1", '2']:
-                    print("sorry, we didn't get that, please try again")
-                else:
-                    if answer == '2':
-                        player.cards.append(takeCardFromDeck(stackedPlusCards, cards))
-                        break
-                    else:
-                        pass       
+                pass       
 
 #config thingys
 createConfig(ownPath)
