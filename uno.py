@@ -157,8 +157,7 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         print(settings)
         pleaseFixTheConfigFile(e)
 
-def chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer):
-    win = False
+def chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win):
     lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
     print(f"The last player played {lastPlayedCard}")
     cardsInDeckString = ""
@@ -171,6 +170,8 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
             numberCard = int(input())
             if numberCard > -1 and numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
+                    if (playedCards[len(playedCards)-1].split(".")[0] == "4" and playedCards[len(playedCards)-1].split(".")[1] == "1") or (playedCards[len(playedCards)-1].split(".")[1] == "11" and playedCards[len(playedCards)-1].split(".")[0] != "4"):
+                        win.append("+")
                     cardsForPlayer, cards, playedCards = (takeCardFromDeck(1, cards, playedCards))#grab a card
                     for x in range(len(cardsForPlayer)):
                         player.cards.append(cardsForPlayer[x])
@@ -189,7 +190,7 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                             player.cards.pop(numberCard)
                             loop = False
                             if len(player.cards) == 0:#check if someone has won
-                                win = True
+                                win[0] = True
                         
                         else:#it is not a available card
                             print("you can't play that card right now")
@@ -231,7 +232,7 @@ def givePeoplePlayingCards(players, cards, settings):#give people starting amoun
             cards.pop(0)
     return players, cards
 
-def playerTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer):
+def playerTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win):
     if playingDirection > 0:
         playingDirection = 1
     else:
@@ -241,19 +242,25 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
     lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
     if settings[4] > 1: #only if it's not singleplayer
         clear_console()
-        input(f"it's player number {player.number}, {player.name} their turn\nPress the enter button to play\n")
+        input(f"it's player number {player.number+1}, {player.name} their turn\nPress the enter button to play\n")
     lastPlayedCardID = playedCards[len(playedCards)-1]
-    if lastPlayedCardID.split(".")[0] == '4' and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
-        stackedPlusCards += 4
-    elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
-        stackedPlusCards += 2
+    if len(win) != 1:
+        while len(win) != 1:
+            win.pop(1)
+    else:
+        if lastPlayedCardID.split(".")[0] == '4' and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
+            stackedPlusCards += 4
+            print(f"The last player played {lastPlayedCard}")
+        elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
+            stackedPlusCards += 2
+            print(f"The last player played {lastPlayedCard}")
     if stackedPlusCards > 0:#if it was a + card, check how many of them are stacked
         check = 1
         for x in range(2, len(playedCards)):
             if check == 1:
-                if playedCards[len(playedCards)- x].split(".")[0] == '4' and playedCards[len(playedCards-x)].split(".")[1] == '1':#check if it is a +4 card
+                if playedCards[len(playedCards)- x].split(".")[0] == '4' and playedCards[len(playedCards)-x].split(".")[1] == '1':#check if it is a +4 card
                     stackedPlusCards += 4
-                elif playedCards[len(playedCards-x)].split(".")[1] == '11':#check if it is a +2 card
+                elif playedCards[len(playedCards)-x].split(".")[1] == '11':#check if it is a +2 card
                     stackedPlusCards += 2
                 else:
                     check = 0
@@ -280,10 +287,11 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                     numberCard = int(input())
                     if numberCard > -1 and numberCard <= len(player.cards ):#check if it's a card you have
                         if numberCard == 0:
-                            cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
+                            if (playedCards[len(playedCards)-1].split(".")[0] == "4" and playedCards[len(playedCards)-1].split(".")[1] == "1") or (playedCards[len(playedCards)-1].split(".")[1] == "11" and playedCards[len(playedCards)-1].split(".")[0] != "4"):
+                                win.append("+")
+                            cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, playedCards))
                             for x in range(len(cardsForPlayer)):
                                 player.cards.append(cardsForPlayer[x])
-                            player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
                             loop = False
                         else:
                             numberCard -= 1
@@ -309,7 +317,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                     print("try a number")
                     print(e)
     else:
-        player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+        player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win)
     input(f"that was your turn {player.name}\npress enter so the next player can play\n")
     return cards, playedCards, playerList, settings, playingDirection, activePlayer, win
                 
@@ -372,14 +380,14 @@ activePlayer = random.randint(0, len(playerList)-1)
 
 #the infinite loop which is called a game
 
-win = False
-while win == False:
+win = [False]
+while win[0] == False:
     activePlayer += playerDirection#for the next turn, also controls skips and reverse
     if activePlayer > len(playerList)-1:
         activePlayer -= len(playerList)
     elif activePlayer < 0:
         activePlayer += len(playerList)
     if playerList[activePlayer].type == 1:
-        cards, playedCards, playerList, settings, playerDirection, activePlayer, win = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer)
+        cards, playedCards, playerList, settings, playerDirection, activePlayer, win = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win)
     else:
         pass
