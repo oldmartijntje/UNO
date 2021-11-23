@@ -91,8 +91,8 @@ def createConfig(ownPath):#creates the config file
     "\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise"+
     "\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1"+
     "\n#choose the amount of special cards (4 by default)\n4"+
-    "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
-    "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
+    "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n2"+
+    "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n0"+
     "\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
     "\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
     settings.close()
@@ -169,7 +169,6 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         pleaseFixTheConfigFile(e)
 
 def chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win):
-    print(player.effect)
     lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1], player.effect)
     print(f"The last player played {lastPlayedCard}")
     cardsInDeckString = ""
@@ -435,7 +434,7 @@ for i in range(setting[4]):
             playerList[len(playerList)-1].effect = 2
         else:
             playerList[len(playerList)-1].effect = 1
-    print(playerList[len(playerList)-1].effect)
+
 
 for i in range(setting[5]):
     if setting[1] != "Exercise":
