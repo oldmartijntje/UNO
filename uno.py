@@ -1,6 +1,7 @@
 import os
 import pathlib
 import random
+import time
 
 #settings: seed0, difficulty1, normal cards2, special cards3, player amount4, starting cards5
 
@@ -22,6 +23,16 @@ def pleaseFixTheConfigFile(exception = ""):#tells u there is a problem with your
 #get the programs path
 ownPath = pathlib.Path().resolve()
 
+def cardIdToName(ID):#input the card id: 1.6 and turns it into blue 6
+    card = ""
+    splitted = ID.split(".")
+    splitted[0] = int(splitted[0])
+    splitted[1] = int(splitted[1])
+    if splitted[0] == 4:
+        card = f"{specialsNames[splitted[1]]}"
+    else:
+        card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+    return card
 
 def clear_console(): # clear the console
     try:
@@ -32,21 +43,25 @@ def clear_console(): # clear the console
         except:
             e = 0
 
-def takeCardFromDeck(amount, cards, playedPile):#grab the amount of cards and add it to your deck
+def takeCardFromDeck(amount, card, played):#grab the amount of cards and add it to your deck
     gift = list()
     for x in range(amount):
-        if len(cards) > 1:
-            gift.append(cards[0])
-            cards.pop(0)
+        if len(card) > 1:
+            gift.append(card[0])
+            print(f"you have grabbed a {cardIdToName(card[0])}")
+            card.pop(0)
         else:#add the played pile to the new cards
             placeholderList = list()
-            for y in range(1, len(playedPile)):
-                placeholderList.append(playedPile[y])
+            for y in range(1, len(played)):
+                placeholderList.append(played[y])
             random.shuffle(placeholderList)
-            cards.append(placeholderList)
+            card.append(placeholderList)
 
-            gift.append(cards[0])
-            cards.pop(0)
+            gift.append(card[0])
+            print(f"you have grabbed a {cardIdToName(card[0])}")
+            card.pop(0)
+            
+    return gift, card, played
 
 def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
@@ -142,8 +157,52 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         print(settings)
         pleaseFixTheConfigFile(e)
 
-def chooseCard():
-    pass
+def chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer):
+    win = False
+    lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
+    print(f"The last player played {lastPlayedCard}")
+    cardsInDeckString = ""
+    for x in range(len(player.cards)):#show all your cards
+        cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
+    print(f"what card do you want to play? (say 0 to grab a card from the pile)\n{cardsInDeckString}")
+    loop = True
+    while loop == True:
+        try:
+            numberCard = int(input())
+            if numberCard > -1 and numberCard <= len(player.cards):#if he chose an existing card
+                if numberCard == 0:
+                    cardsForPlayer, cards, playedCards = (takeCardFromDeck(1, cards, playedCards))#grab a card
+                    for x in range(len(cardsForPlayer)):
+                        player.cards.append(cardsForPlayer[x])
+                    loop = False
+                else: #play the card
+                    numberCard -= 1
+                    splittedCard = player.cards[numberCard].split(".")
+                    splittedLastCard = playedCards[len(playedCards)-1].split(".")
+                    if splittedCard[0] != "4" and splittedLastCard[0] != "4": #check for wild or +4 card
+                        if splittedCard[0] == splittedLastCard[0] or splittedCard[1] == splittedLastCard[1]:
+                            playedCards.append(player.cards[numberCard])
+                            if player.cards[numberCard].split(".")[1] == "12":#check for reverse card
+                                playingDirection = playingDirection * -1
+                            elif player.cards[numberCard].split(".")[1] == "10":#check for skip card
+                                playingDirection = playingDirection * 2
+                            player.cards.pop(numberCard)
+                            loop = False
+                            if len(player.cards) == 0:#check if someone has won
+                                win = True
+                        
+                        else:#it is not a available card
+                            print("you can't play that card right now")
+                    else:# play the wild or +4 card
+                        playedCards.append(player.cards[numberCard])
+                        player.cards.pop(numberCard)
+                        loop = False
+            else:
+                print("you don't have a card in that slot")
+        except Exception as e:
+            print(e)
+            print("try inputting a number")
+    return player, playedCards, playingDirection, win
 
 def stringToSeed(string): #turns everything into ther ASCII value
     seedList = []
@@ -165,33 +224,24 @@ def setupCardPile(color, types, special, settings): #shuffles and creates card d
     random.shuffle(cardPile)
     return cardPile
 
-def cardIdToName(ID):#input the card id: 1.6 and turns it into blue 6
-    card = ""
-    splitted = ID.split(".")
-    splitted[0] = int(splitted[0])
-    splitted[1] = int(splitted[1])
-    if splitted[0] == 4:
-        card = f"{specialsNames[splitted[1]]}"
-    else:
-        card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
-    return card
-
 def givePeoplePlayingCards(players, cards, settings):#give people starting amount of playing cards
     for x in range(len(players)):
-        for y in range(setting[5]):
+        for y in range(settings[7]):
             players[x].cards.append(cards[0])
             cards.pop(0)
     return players, cards
 
 def playerTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer):
+    if playingDirection > 0:
+        playingDirection = 1
+    else:
+        playingDirection = -1
     stackedPlusCards = 0
-    player.cards.append("0.11")
-    playedCards.append("0.11")
+
     lastPlayedCard = cardIdToName(playedCards[len(playedCards)-1])
     if settings[4] > 1: #only if it's not singleplayer
         clear_console()
         input(f"it's player number {player.number}, {player.name} their turn\nPress the enter button to play\n")
-        print(f"The last player played {lastPlayedCard}")
     lastPlayedCardID = playedCards[len(playedCards)-1]
     if lastPlayedCardID.split(".")[0] == '4' and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
         stackedPlusCards += 4
@@ -201,9 +251,9 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
         check = 1
         for x in range(2, len(playedCards)):
             if check == 1:
-                if playedCards[len(playedCards-x)].split(".")[0] == 4 and playedCards[len(playedCards-x)].split(".")[1] == 1:#check if it is a +2 card
+                if playedCards[len(playedCards)- x].split(".")[0] == '4' and playedCards[len(playedCards-x)].split(".")[1] == '1':#check if it is a +4 card
                     stackedPlusCards += 4
-                elif playedCards[len(playedCards-x)].split(".")[1] == 11:#check if it is a +4 card
+                elif playedCards[len(playedCards-x)].split(".")[1] == '11':#check if it is a +2 card
                     stackedPlusCards += 2
                 else:
                     check = 0
@@ -216,9 +266,54 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                 yourAmountPlusCards[0] += 1
         if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
             cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
+            for x in range(len(cardsForPlayer)):
+                player.cards.append(cardsForPlayer[x])
+            player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
         else:
-            while True:
-                pass       
+            cardsInDeckString = ""
+            for x in range(len(player.cards)):#show all your cards
+                cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x])+" | "
+            print(f"what card do you want to play? (say 0 to grab the cards from the pile)\n{cardsInDeckString}")
+            loop = True
+            while loop == True:
+                try:
+                    numberCard = int(input())
+                    if numberCard > -1 and numberCard <= len(player.cards ):#check if it's a card you have
+                        if numberCard == 0:
+                            cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
+                            for x in range(len(cardsForPlayer)):
+                                player.cards.append(cardsForPlayer[x])
+                            player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+                            loop = False
+                        else:
+                            numberCard -= 1
+                            if player.cards[numberCard].split(".")[0] == '4' and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
+                                playedCards.append(player.cards[numberCard])
+                                player.cards.pop(numberCard)
+                                loop = False
+                            elif player.cards[numberCard].split(".")[1] == '11':#check if it is a +2 card
+                                playedCards.append(player.cards[numberCard])
+                                player.cards.pop(numberCard)
+                                loop = False
+                            else:
+                                print("\nthe last player played a + card so we will grab your cards first, then you can choose which one to play\n")#get cards
+                                time.sleep(3)
+                                cardsForPlayer, cards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, playedCards))
+                                for x in range(len(cardsForPlayer)):
+                                    player.cards.append(cardsForPlayer[x])
+                                player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+                                loop = False
+                    else:
+                        print("that is not a card you have")
+                except Exception as e:
+                    print("try a number")
+                    print(e)
+    else:
+        player, playedCards, playingDirection, win = chooseCard(player, cards, playedCards, playerList, settings, playingDirection, activePlayer)
+    input(f"that was your turn {player.name}\npress enter so the next player can play\n")
+    return cards, playedCards, playerList, settings, playingDirection, activePlayer, win
+                
+                           
 
 #config thingys
 createConfig(ownPath)
@@ -229,14 +324,14 @@ if setting[0] != False: random.seed(setting[0])#set seed if seed in config
 #basic settings
 cardTypes = [0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12]#1 deck of color cards per color
 #all types of cards with a color 0-9 numbers, 10 skip, 11 +2, 12 reverse
-cardTypesNames = ["0", '1', '2', '3', '4', '5', '6', '7', '8', '9', 'skip', 'draw two', 'reverse']
+cardTypesNames = ["zero", 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'skip', 'draw two', 'reverse']
 cardColors = [0, 1, 2, 3, 4]#all colors, special, red, blue, green, yellow
 cardColorsNames = ["red", 'blue', 'green', 'yellow', 'black']
 specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
 computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
 'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
-'Ms.Kittens', 'attack helicopter', 'shell', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris']
+'Ms.Kittens', 'attack helicopter', 'shell', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet']
 colorblindNames = ['thomas', 'george', 'colorblind guy']
 
 #creating players
@@ -275,7 +370,16 @@ playerDirection = 1
 playerList, cardDeck = givePeoplePlayingCards(playerList, cardDeck, setting)
 activePlayer = random.randint(0, len(playerList)-1)
 
-if playerList[activePlayer].type == 1:
-    playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer)
-else:
-    pass
+#the infinite loop which is called a game
+
+win = False
+while win == False:
+    activePlayer += playerDirection#for the next turn, also controls skips and reverse
+    if activePlayer > len(playerList)-1:
+        activePlayer -= len(playerList)
+    elif activePlayer < 0:
+        activePlayer += len(playerList)
+    if playerList[activePlayer].type == 1:
+        cards, playedCards, playerList, settings, playerDirection, activePlayer, win = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer)
+    else:
+        pass
