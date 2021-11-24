@@ -31,17 +31,30 @@ def cardIdToName(ID, effect = 0):#input the card id: 1.6 and turns it into blue 
     splitted = ID.split(".")
     splitted[0] = int(splitted[0])
     splitted[1] = int(splitted[1])
-    if splitted[0] == 4:
-        card = f"{specialsNames[splitted[1]]}"
-    else:
+    try:
+        splitted[2] = int(splitted[2])
+
+        #a wild card has a chosen color
         if effect == 1:
-            card = f'{yellowGreenColorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            card = f'{specialsNames[splitted[1]]} with chosen color {yellowGreenColorblindCardColorsNames[splitted[2]]}'
         elif effect == 2:
-            card = f'{blueRedColorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            card = f'{specialsNames[splitted[1]]} with chosen color {blueRedColorblindCardColorsNames[splitted[2]]}'
         elif effect == 3:
-            card = f'{colorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            card = f'{specialsNames[splitted[1]]} with chosen color {colorblindCardColorsNames[splitted[2]]}'
         else:
-            card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            card = f'{specialsNames[splitted[1]]} with chosen color {cardColorsNames[splitted[2]]}'
+    except:
+        if splitted[0] == 4:
+            card = f"{specialsNames[splitted[1]]}"
+        else:
+            if effect == 1:
+                card = f'{yellowGreenColorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            elif effect == 2:
+                card = f'{blueRedColorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            elif effect == 3:
+                card = f'{colorblindCardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
+            else:
+                card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
     return card
 
 def clear_console(): # clear the console
@@ -59,7 +72,7 @@ def takeCardFromDeck(amount, card, played, player):#grab the amount of cards and
     for x in range(amount):
         if len(card) > 1:
             gift.append(card[0])
-            print(f"you have grabbed a {cardIdToName(card[0]), player.effect}")
+            print(f"you have grabbed a {cardIdToName(card[0], player.effect)}")
             card.pop(0)
         else:#add the played pile to the new cards
             placeholderList = list()
@@ -69,7 +82,7 @@ def takeCardFromDeck(amount, card, played, player):#grab the amount of cards and
             card.append(placeholderList)
 
             gift.append(card[0])
-            print(f"you have grabbed a {cardIdToName(card[0]), player.effect}")
+            print(f"you have grabbed a {cardIdToName(card[0], player.effect)}")
             card.pop(0)
             
     return gift, card, played
@@ -91,8 +104,8 @@ def createConfig(ownPath):#creates the config file
     "\n#choose a gamemode, these are the gamemodes:\n#Easy\n#Normal\n#Impossible\n#Exercise\nExercise"+
     "\n#choose the amount of normal cards (how many times a set of 13 cards x color) default is 1\n1"+
     "\n#choose the amount of special cards (4 by default)\n4"+
-    "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n2"+
-    "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n0"+
+    "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
+    "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
     "\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
     "\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
     settings.close()
@@ -227,11 +240,48 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                         else:#it is not a available card
                             print("you can't play that card right now")
                     else:# play the wild or +4 card
-                        playedCards.append(player.cards[numberCard])
-                        player.cards.pop(numberCard)
-                        print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")
-                        historyOfCards.append(playedCards[len(playedCards)-1])
-                        loop = False
+                        if splittedCard[1] == '0' and splittedCard[0] == '4':#if you played a wild
+                            loop1 = True
+                            while loop1 == True:
+                                wildCardColorLoop = ""
+                                for x in range(len(cardColors)-1):#show all your cards
+                                    wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
+                                try:
+                                    chosenColor = int(input(f"what color do you choose?\n{wildCardColorLoop}\n"))#choose the color of the wild card
+                                    if chosenColor-1 < len(cardColors)-1 and chosenColor-1 >= 0:
+                                        playedCards.append(f"{player.cards[numberCard]}.{chosenColor-1}")
+                                        player.cards.pop(numberCard)
+                                        print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")
+                                        historyOfCards.append(playedCards[len(playedCards)-1])
+                                        loop1 = False
+                                        loop = False
+                                    else:
+                                        print("that is not an option")
+                                except Exception as e:
+                                    print(e)
+                                    print("please choose a number")
+                        elif splittedLastCard[1] == '0' and splittedLastCard[0] == '4':
+                            #need to create the shit here that sees what color someone has chosen for the wild card
+                            if len(splittedLastCard) == 3:
+                                if splittedCard[0] == splittedLastCard[2]:
+                                    playedCards.append(player.cards[numberCard])
+                                    player.cards.pop(numberCard)
+                                    print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")
+                                    historyOfCards.append(playedCards[len(playedCards)-1])
+                                    loop = False
+                                    if len(player.cards) == 0:#check if someone has won
+                                        win[0] = True
+                                else:#it is not a available card
+                                    print("you can't play that card right now")
+                            else:
+                                playedCards.append(player.cards[numberCard])
+                                player.cards.pop(numberCard)
+                                print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")
+                                historyOfCards.append(playedCards[len(playedCards)-1])
+                                loop = False
+                                if len(player.cards) == 0:#check if someone has won
+                                    win[0] = True
+                        
             else:
                 print("you don't have a card in that slot")
         except Exception as e:
@@ -344,7 +394,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                             cardsInDeckString = ""
                             for x in range(len(player.cards)):#show all your cards
                                 cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
-                                print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
+                            print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
                         else:
                             numberCard -= 1
                             if player.cards[numberCard].split(".")[0] == '4' and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
