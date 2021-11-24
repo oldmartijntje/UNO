@@ -251,7 +251,7 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
                     splittedLastCard = playedCards[len(playedCards)-1].split(".")
-                    if splittedCard[0] != "4" and splittedLastCard[0] != "4": #check for wild or +4 card
+                    if int(splittedCard[0]) != len(cardColors)-1 and int(splittedLastCard[0]) != len(cardColors)-1: #check for wild or +4 card
                         if splittedCard[0] == splittedLastCard[0] or splittedCard[1] == splittedLastCard[1]:
                             playedCards.append(player.cards[numberCard])
                             if player.cards[numberCard].split(".")[1] == "12":#check for reverse card
@@ -268,7 +268,7 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                         else:#it is not a available card
                             print("you can't play that card right now")
                     else:# play the wild or +4 card
-                        if splittedCard[1] == '0' and splittedCard[0] == '4':#if you played a wild
+                        if splittedCard[1] == '0' and int(splittedCard[0]) == len(cardColors)-1:#if you played a wild
                             loop1 = True
                             while loop1 == True:
                                 wildCardColorLoop = ""
@@ -288,7 +288,7 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                                 except Exception as e:
                                     print(e)
                                     print("please choose a number")
-                        elif splittedLastCard[1] == '0' and splittedLastCard[0] == '4':
+                        elif splittedLastCard[1] == '0' and int(splittedLastCard[0]) == len(cardColors)-1:
                             #need to create the shit here that sees what color someone has chosen for the wild card
                             if len(splittedLastCard) == 3:
                                 if splittedCard[0] == splittedLastCard[2]:
@@ -360,7 +360,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
         while len(win) != 1:
             win.pop(1)
     else:
-        if lastPlayedCardID.split(".")[0] == '4' and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
+        if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
             stackedPlusCards += 4
             print(f"The last player played {lastPlayedCard}")
         elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
@@ -370,7 +370,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
         check = 1
         for x in range(2, len(playedCards)):
             if check == 1:
-                if playedCards[len(playedCards)- x].split(".")[0] == '4' and playedCards[len(playedCards)-x].split(".")[1] == '1':#check if it is a +4 card
+                if int(playedCards[len(playedCards)- x].split(".")[0]) == len(cardColors)-1 and playedCards[len(playedCards)-x].split(".")[1] == '1':#check if it is a +4 card
                     stackedPlusCards += 4
                 elif playedCards[len(playedCards)-x].split(".")[1] == '11':#check if it is a +2 card
                     stackedPlusCards += 2
@@ -379,7 +379,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
     yourAmountPlusCards = [0, 0]
     if stackedPlusCards > 0:
         for x in range(len(player.cards)): #check if you have any + card to counter
-            if player.cards[x].split(".")[0] == '4' and player.cards[x].split(".")[1] == '1':
+            if int(player.cards[x].split(".")[0]) == len(cardColors)-1 and player.cards[x].split(".")[1] == '1':
                 yourAmountPlusCards[1] += 1
             elif player.cards[x].split(".")[1] == '11':
                 yourAmountPlusCards[0] += 1
@@ -425,7 +425,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
                             print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
                         else:
                             numberCard -= 1
-                            if player.cards[numberCard].split(".")[0] == '4' and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
+                            if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
                                 playedCards.append(player.cards[numberCard])
                                 print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")#show what you have played
                                 historyOfCards.append(playedCards[len(playedCards)-1])
