@@ -2,6 +2,13 @@ import os
 import pathlib
 import random
 import time
+import ast
+pluginEquipped = False
+try:
+    from examplePlugin import *
+    pluginEquipped = True
+except:
+    print("no plugins (plugin.py) found")
 
 historyOfCards = list()
 historyPlayersThatPlayedACard = list()
@@ -17,6 +24,21 @@ class player(): #player and computer
         self.type = playerOrComputer
         self.number = playerNumber
 
+def pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames):
+    ownPath = pathlib.Path().resolve()
+    if os.path.isfile(f"{ownPath}/plugin.ini"):
+        pluginTXT = open(f"{ownPath}/plugin.ini", "r")
+        reading = pluginTXT.read().split('\n')
+        readingIsList = list()
+        for x in range(len(reading)):
+            if reading[x][0] != "#":
+                try:
+                    readingIsList.append(ast.literal_eval(reading[x]))
+                except:
+                    readingIsList.append(reading[x].strip('][').split(', '))
+        input(readingIsList)
+        cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = readingIsList
+    return cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames
 
 def pleaseFixTheConfigFile(exception = ""):#tells u there is a problem with your config
     input(f"There is a problem with \"{ownPath}/Config.ini\" Go fix it, or Delete it\nPress Enter to close")
@@ -107,7 +129,8 @@ def createConfig(ownPath):#creates the config file
     "\n#choose the amount of Players 2-10 (per set of cards (combined with computer players)) (1 by default)\n1"+
     "\n#choose the amount of Computer players 2-10 (per set of cards (combined with players)) (3 by default)\n3"+
     "\n#do you want to use playernames? (if not, it will randomly select one) if yes, type True, if not type False\nTrue"+
-    "\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7")
+    "\n#choose the amount of starting cards (might break if no cards are left) (7 by default)\n7"+
+    "\n#do you want to use status effects? if yes, type True, if not type False\nTrue")
     settings.close()
 
 def readConfig():#reads the config file lines and ignores # lines
@@ -175,6 +198,11 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
 
         settings.append(int(rawSettings[7])) #set amount of starting cards
 
+        settings.append(rawSettings[8])
+        if rawSettings[8] == "False":#check if they want colorblindness
+            settings[8] = False
+        else:
+            settings[8] = True
 
         return settings
     except Exception as e:
@@ -452,7 +480,7 @@ computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man'
 'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
 'Ms.Kittens', 'attack helicopter', 'shell', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet']
 colorblindNames = ['thomas', 'george', 'colorblind guy']
-
+cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames)
 #creating players
 playerList = list()
 for i in range(setting[4]):
@@ -466,7 +494,7 @@ for i in range(setting[4]):
                 break
     else:
         playerList.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
-        if playerList[len(playerList)-1].name.lower() in colorblindNames:
+        if playerList[len(playerList)-1].name.lower() in colorblindNames and setting[8] == True:
             randomNumber = random.randint(0,100)
             if randomNumber > 85:#the colorblind effect
                 playerList[len(playerList)-1].effect = 3
@@ -476,7 +504,7 @@ for i in range(setting[4]):
                 playerList[len(playerList)-1].effect = 1
 
     randomNumber = random.randint(0,100)
-    if randomNumber < 8:#the colorblind effect
+    if randomNumber < 8  and setting[8] == True:#the colorblind effect
         randomNumber = random.randint(0,100)
         if randomNumber > 85:
             playerList[len(playerList)-1].effect = 3
@@ -489,7 +517,7 @@ for i in range(setting[4]):
 for i in range(setting[5]):
     if setting[1] != "Exercise":
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
-        if playerList[len(playerList)-1].name.lower() in colorblindNames.lower():
+        if playerList[len(playerList)-1].name.lower() in colorblindNames.lower() and setting[8] == True:
             randomNumber = random.randint(0,100)#the colorblind effect
             if randomNumber > 85:
                 playerList[len(playerList)-1].effect = 3
@@ -500,7 +528,7 @@ for i in range(setting[5]):
     else:
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
 
-    if random.randint(0,100) > 8:#the colorblind effect
+    if random.randint(0,100) > 8 and setting[8] == True:#the colorblind effect
         randomNumber = random.randint(0,100)
         if randomNumber > 85:
             playerList[len(playerList)-1].effect = 3
@@ -509,24 +537,27 @@ for i in range(setting[5]):
         else:
             playerList[len(playerList)-1].effect = 1
 
-#creating a game
-cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
-playedCardsPile = [cardDeck[0]]#start card
-cardDeck.pop(0)#remove start card from cards list
-playerDirection = 1
-playerList, cardDeck = givePeoplePlayingCards(playerList, cardDeck, setting)
-activePlayer = random.randint(0, len(playerList)-1)
+try:
+    #creating a game
+    cardDeck = setupCardPile(cardColors, cardTypes, specials, setting)
+    playedCardsPile = [cardDeck[0]]#start card
+    cardDeck.pop(0)#remove start card from cards list
+    playerDirection = 1
+    playerList, cardDeck = givePeoplePlayingCards(playerList, cardDeck, setting)
+    activePlayer = random.randint(0, len(playerList)-1)
 
-#the infinite loop which is called a game
+    #the infinite loop which is called a game
 
-win = [False]
-while win[0] == False:
-    activePlayer += playerDirection#for the next turn, also controls skips and reverse
-    if activePlayer > len(playerList)-1:
-        activePlayer -= len(playerList)
-    elif activePlayer < 0:
-        activePlayer += len(playerList)
-    if playerList[activePlayer].type == 1:
-        cards, playedCards, playerList, settings, playerDirection, activePlayer, win = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win)
-    else:
-        pass
+    win = [False]
+    while win[0] == False:
+        activePlayer += playerDirection#for the next turn, also controls skips and reverse
+        if activePlayer > len(playerList)-1:
+            activePlayer -= len(playerList)
+        elif activePlayer < 0:
+            activePlayer += len(playerList)
+        if playerList[activePlayer].type == 1:
+            cards, playedCards, playerList, settings, playerDirection, activePlayer, win = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win)
+        else:
+            pass
+except Exception as e:
+    input(e)
