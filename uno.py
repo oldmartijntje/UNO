@@ -109,6 +109,16 @@ def takeCardFromDeck(amount, card, played, player):#grab the amount of cards and
             
     return gift, card, played
 
+def checkForUno(playerList, player):
+    num = 0
+    for x in range(len(playerList)):
+        if player.number != playerList[x].number and len(playerList[x].cards) == 1:
+            print(f"player {playerList[x].number}, {playerList[x].name} has 1 card left")
+            num += 1
+    if num > 0:
+        print("input -1 to see stats like these of other people, and other tools")
+    return
+
 def createConfig(ownPath):#creates the config file
     #open settings if .settings.txt exists
     if os.path.isfile(f"{ownPath}/Config.ini"):
@@ -264,25 +274,42 @@ def chooseCard(player, cards, playedCards, playerList, settings, playingDirectio
                             loop = False
                             if len(player.cards) == 0:#check if someone has won
                                 win[0] = True
-                        
+                            if len(win) != 1:
+                                while len(win) != 1:
+                                    win.pop(1)
                         else:#it is not a available card
                             print("you can't play that card right now")
                     else:# play the wild or +4 card
                         if splittedCard[1] == '0' and int(splittedCard[0]) == len(cardColors)-1:#if you played a wild
                             loop1 = True
+                            wildCardColorLoop = ""
+                            for x in range(len(cardColors)-1):#show all your cards
+                                wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
                             while loop1 == True:
-                                wildCardColorLoop = ""
-                                for x in range(len(cardColors)-1):#show all your cards
-                                    wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
                                 try:
                                     chosenColor = int(input(f"what color do you choose?\n{wildCardColorLoop}\n"))#choose the color of the wild card
-                                    if chosenColor-1 < len(cardColors)-1 and chosenColor-1 >= 0:
+                                    if chosenColor-5 < len(cardColors)-1 and chosenColor-1 >= 0:
                                         playedCards.append(f"{player.cards[numberCard]}.{chosenColor-1}")
                                         player.cards.pop(numberCard)
                                         print(f"you played {cardIdToName(playedCards[len(playedCards)-1], player.effect)}")
                                         historyOfCards.append(playedCards[len(playedCards)-1])
                                         loop1 = False
                                         loop = False
+                                        if chosenColor == -1:
+                                            print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options")
+                                        elif chosenColor == -2:
+                                            for x in range(len(playerList)):
+                                                print(f"player {x}, {playerList[x].name} has {len(playerList[x].cards)} cards")
+                                        elif chosenColor == -3:
+                                            for x in range(len(historyOfCards)):
+                                                if historyOfCards[x] != "nothing, he grabbed a card":
+                                                    print(f"{historyPlayersThatPlayedACard[x]} played {cardIdToName(historyOfCards[x], player.effect)}")
+                                                else:
+                                                    print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
+                                        elif chosenColor == -4:
+                                            wildCardColorLoop = ""
+                                            for x in range(len(cardColors)-1):#show all your cards
+                                                wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
                                     else:
                                         print("that is not an option")
                                 except Exception as e:
@@ -345,6 +372,7 @@ def givePeoplePlayingCards(players, cards, settings):#give people starting amoun
     return players, cards
 
 def playerTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win):
+    checkForUno(playerList, player)
     if playingDirection > 0:
         playingDirection = 1
     else:
@@ -357,8 +385,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
         input(f"it's player number {player.number+1}, {player.name} their turn\nPress the enter button to play\n")
     lastPlayedCardID = playedCards[len(playedCards)-1]
     if len(win) != 1:
-        while len(win) != 1:
-            win.pop(1)
+        pass
     else:
         if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
             stackedPlusCards += 4
@@ -392,7 +419,7 @@ def playerTurn(player, cards, playedCards, playerList, settings, playingDirectio
             cardsInDeckString = ""
             for x in range(len(player.cards)):#show all your cards
                 cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
-            print(f"what card do you want to play? (say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
+            print(f"what card do you want to play? (if you choose something that isn't a + card it will collect the cards, and ask again after you have collected the cards) \n(say 0 to grab the cards from the pile, say -1 to see other options)\n{cardsInDeckString}")
             loop = True
             while loop == True:
                 try:
