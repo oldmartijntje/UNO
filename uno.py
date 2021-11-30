@@ -101,7 +101,7 @@ def clear_console(): # clear the console
 def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode = 0):#grab the amount of cards and add it to your deck
     gift = list()
     if mode == 0 : print(f"you drew {amount} cards:")
-    if mode == 1 : print(f"player {player.number}, {player.name} drew {amount} cards")
+    if mode == 1 : print(f"player {player.number + 1}, {player.name} drew {amount} cards")
     for x in range(amount):
         if len(cardPile) > 1:
             gift.append(cardPile[0])
@@ -129,7 +129,7 @@ def checkForUno(playerList, player):
     num = 0
     for x in range(len(playerList)):
         if player.number != playerList[x].number and len(playerList[x].cards) == 1:
-            print(f"player {playerList[x].number}, {playerList[x].name} has 1 card left")
+            print(f"player {playerList[x].number + 1}, {playerList[x].name} has 1 card left")
             num += 1
     if num > 0:
         print("input -1 to see stats like these of other people, and other tools")
@@ -278,7 +278,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                 elif numberCard == -6:
                     playerList.pop(player.number)
                     playingDirection = playingDirection * len(playerList)
-                    print(f"u deleted {player.number}, {player.name} from the game")
+                    print(f"u deleted {player.number + 1}, {player.name} from the game")
                     loop = False
                 else: #play the card
                     numberCard -= 1
@@ -287,10 +287,6 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     if int(splittedCard[0]) != len(cardColors)-1 and int(splittedLastCard[0]) != len(cardColors)-1: #check for wild or +4 card
                         if splittedCard[0] == splittedLastCard[0] or splittedCard[1] == splittedLastCard[1]:
                             lastPlayedCard.append(player.cards[numberCard])
-                            if player.cards[numberCard].split(".")[1] == "12":#check for reverse card
-                                playingDirection = playingDirection * -1
-                            elif player.cards[numberCard].split(".")[1] == "10":#check for skip card
-                                playingDirection = playingDirection * 2
                             player.cards.pop(numberCard)
                             print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
                             historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
@@ -618,7 +614,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
         playingDirection = -1
     stackedPlusCards = 0       
     lastPlayedCardID = lastPlayedCards[len(lastPlayedCards)-1]   
-    if len(win) != 1:
+    if len(win) != 1 or turn == 1:
         pass   
     else:
         if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
@@ -740,11 +736,11 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
         player.cards.remove(-1)
     except:
         pass
-    print(f"player {player.number}, {player.name} played: {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1])}")
+    print(f"player {player.number+ 1}, {player.name} played: {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1])}")
     if len(player.cards) == 0: win[0] = True
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
 
-def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards):
+def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
 
     if playingDirection > 0:
         playingDirection = 1
@@ -758,7 +754,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
         input(f"it's player number {player.number+1}, {player.name} their turn\nPress the enter button to play\n")
     checkForUno(playerList, player)
     lastPlayedCardID = lastPlayedCards[len(lastPlayedCards)-1]
-    if len(win) != 1:
+    if len(win) != 1 or turn == 1:
         pass
     else:
         if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
@@ -829,7 +825,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                         elif numberCard == -6:
                             playerList.pop(player.number)
                             playingDirection = playingDirection * len(playerList)
-                            print(f"u deleted {player.number}, {player.name} from the game")
+                            print(f"u deleted {player.number+ 1}, {player.name} from the game")
                             loop = False
                         else:
                             numberCard -= 1
@@ -886,7 +882,7 @@ specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
 computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
 'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
-'Ms.Kittens', 'attack helicopter', 'shell', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet']
+'Ms.Kittens', 'attack helicopter', 'shell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet']
 colorblindNames = ['thomas', 'george', 'colorblind guy']
 cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames)
 #creating players
@@ -959,6 +955,7 @@ try:
     win = [False]
     while win[0] == False:
         turn += 1
+        
         activePlayer += playerDirection#for the next turn, also controls skips and reverse
         while activePlayer < 0 or activePlayer >= len(playerList):
             if activePlayer > len(playerList)-1:
@@ -966,9 +963,13 @@ try:
             elif activePlayer < 0:
                 activePlayer += len(playerList)
         if playerList[activePlayer].type == 1:
-            cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards)
+            cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
         else:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = aiTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
+        if playedCards[len(playedCards)-1].split(".")[1] == "12":#check for reverse card
+            playerDirection = playerDirection * -1
+        elif playedCards[len(playedCards)-1].split(".")[1] == "10":#check for skip card
+            playerDirection = playerDirection * 2
     print(f"player {playerList[activePlayer].number}, {playerList[activePlayer].name} is the winner, Congrats!!")
 except Exception as e:
     print(f"seed: {setting[0]}")
