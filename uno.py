@@ -421,8 +421,123 @@ def givePeoplePlayingCards(players, cards, settings):#give people starting amoun
             cards.pop(0)
     return players, cards
 
+def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards):
+    def checkAmountOfCards(playerList):
+        amount = list()
+        for x in len(playerList):
+            amount.append(len(playerList[x].cards))
+        return amount
+
+    def checkNormalTurn(player, cards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor):
+        valueList = list()
+        return valueList
+
+    uno = checkAmountOfCards(playerList)
+    value = list()
+    amountOfColor = list()
+    bestColor = list()
+    for x in range(len(playerList)):#add 0 to list with color amount
+        amountOfColor.append(0)
+    for x in range(len(player.cards)):#check amount of cards of color
+        amountOfColor[int(player.cards[x].split(".")[0])] += 1
+    for x in range(len(amountOfColor)):
+        testForHighest = 1
+        for y in range(len(amountOfColor)): 
+            if amountOfColor[x] < amountOfColor[y]:
+                testForHighest = 0
+        if testForHighest == 1:
+            bestColor.append(x)
+
+
+    if playingDirection > 0:
+        playingDirection = 1
+    else:
+        playingDirection = -1
+    stackedPlusCards = 0       
+    lastPlayedCardID = lastPlayedCards[len(lastPlayedCards)-1]   
+    if len(win) != 1:
+        pass   
+    else:
+        if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
+            stackedPlusCards += 4
+        elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
+            stackedPlusCards += 2
+    if stackedPlusCards > 0:#if it was a + card, check how many of them are stacked
+        check = 1
+        for x in range(2, len(lastPlayedCards)):
+            if check == 1:
+                if int(lastPlayedCards[len(lastPlayedCards)- x].split(".")[0]) == len(cardColors)-1 and lastPlayedCards[len(lastPlayedCards)-x].split(".")[1] == '1':#check if it is a +4 card
+                    stackedPlusCards += 4
+                elif lastPlayedCards[len(lastPlayedCards)-x].split(".")[1] == '11':#check if it is a +2 card
+                    stackedPlusCards += 2
+                else:
+                    check = 0
+    yourAmountPlusCards = [0, 0]
+    if stackedPlusCards > 0:
+        for x in range(len(player.cards)): #check if you have any + card to counter
+            if int(player.cards[x].split(".")[0]) == len(cardColors)-1 and player.cards[x].split(".")[1] == '1':
+                yourAmountPlusCards[1] += 1
+            elif player.cards[x].split(".")[1] == '11':
+                yourAmountPlusCards[0] += 1
+        if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
+            cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, lastPlayedCards, player, playedCards))
+            for x in range(len(cardsForPlayer)):
+                player.cards.append(cardsForPlayer[x])
+            valueList = checkNormalTurn(player, cards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor)
+        else:
+            for x in range(len(player.cards)):#give value to cards
+                testCard = player.cards[x]
+                if int(testCard.split(".")[0]) == len(cardColors)-1 and testCard.split(".")[1] == "1":
+                    if uno[player.number + playingDirection] <= 2:
+                        value.append(7)
+                    else:
+                        value.append(4)
+                elif testCard.split(".")[1] == '11':
+                    if testCard.split(".")[0] in bestColor:
+                        value.append(6)
+                    else:
+                        value.append(5)
+                else:
+                    if int(lastPlayedCardID.split(".")[0]) != len(cardColors)-1:#if it's a +2
+                        if testCard.split(".")[0] == lastPlayedCardID.split(".")[0]:#if it's playable
+                            if testCard.split(".")[0] in bestColor: #if it's your fav color
+                                value.append(3)
+                            else:
+                                value.append(2)
+                        else:
+                            value.append(0)
+                    else:
+                        if testCard.split(".")[0] in bestColor: #if it's your fav color
+                            value.append(1)
+                        else:
+                            value.append(0)
+     
+    else:
+        for x in range(len(player.cards)):#give value to cards
+            pass
+
+    bestChoice = list()
+    for x in range(len(value)):
+        testForHighest = 1
+        for y in range(len(value)): 
+            if value[x] < value[y]:
+                testForHighest = 0
+        if testForHighest == 1:
+            bestChoice.append(x)
+
+    if len(bestChoice) > 1:
+        randomChosen = random.randint(0, len(bestChoice))
+        lastPlayedCards.append(player.cards[bestChoice[randomChosen]])
+        historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
+        player.cards.pop(bestChoice[randomChosen])
+    else:
+        lastPlayedCards.append(player.cards[bestChoice[0]])
+        historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
+        player.cards.pop(bestChoice[0])
+
+
 def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards):
-    lastPlayedCards[0] = "4.1"
+
     if playingDirection > 0:
         playingDirection = 1
     else:
@@ -542,8 +657,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
     historyPlayersThatPlayedACard.append(player.name)
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
                 
-def aiTurn(player, cards, playedCards, playerList, settings, playingDirection, activePlayer, win):
-    pass                           
+          
 
 #config thingys
 createConfig(ownPath)
@@ -646,6 +760,6 @@ try:
         if playerList[activePlayer].type == 1:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards)
         else:
-            pass
+            aiTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards)
 except Exception as e:
     input(e)
