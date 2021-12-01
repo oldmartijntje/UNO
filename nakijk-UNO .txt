@@ -53,11 +53,12 @@ Is er een ZIP file ingeleverd met alle opdrachten: ja
 
 Indien de opdracht naar jouw mening niet voldaan is wat moet er dan nog aangepast worden om de opdracht succesvol af te ronden?
 
-AI gespeelde kaarten laten zien 
+
  
  
 
-
+Ai gespeelde kaarten laten zien 
+(gefixt na deze feedback)
 
 
 

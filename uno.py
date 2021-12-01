@@ -89,6 +89,12 @@ def cardIdToName(ID, effect = 0):#input the card id: 1.6 and turns it into blue 
                 card = f'{cardColorsNames[splitted[0]]} {cardTypesNames[splitted[1]]}'
     return card
 
+def lookAtCards(listOfPlayers):
+    for x in range(len(listOfPlayers)):
+        for y in range(len(listOfPlayers[x].cards)):
+            print(f"{listOfPlayers[x].number}, {listOfPlayers[x].name} has {cardIdToName(listOfPlayers[x].cards[y])}")
+
+
 def clear_console(): # clear the console
     try:
         os.system('cls')
@@ -236,6 +242,14 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
         print(settings)
         pleaseFixTheConfigFile(e)
 
+def checkForPlus(card):
+        test = False
+        if int(card.split(".")[0]) == len(cardColors)-1 and card.split(".")[1] == '1':#check if it is a +4 card
+            test = True
+        elif card.split(".")[1] == '11':#check if it is a +2 card
+            test = True
+        return test
+
 def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards):
     lastPlayedCardName = cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)
     if turn != 1:
@@ -250,7 +264,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
     while loop == True:
         try:
             numberCard = int(input())
-            if numberCard > -7 and numberCard <= len(player.cards):#if he chose an existing card
+            if numberCard > -8 and numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
                     if (lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] == "4" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "1") or (lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "11" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] != "4"):
                         win.append("+")
@@ -286,6 +300,8 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     playingDirection = playingDirection * len(playerList)
                     print(f"u deleted {player.number + 1}, {player.name} from the game")
                     loop = False
+                elif numberCard == -7:
+                    lookAtCards(playerList)
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -401,6 +417,10 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
         except Exception as e:
             print(e)
             print("try inputting a number")
+    if checkForPlus(playedPlusCards[len(playedPlusCards)-1]) == True:
+        for x in range(len(playedPlusCards)-1):
+            playedPlusCards.append(playedPlusCards[len(playedPlusCards)-2])
+            playedPlusCards.pop(len(playedPlusCards)-2)
     return player, lastPlayedCard, playingDirection, win, playedPlusCards
 
 def setupCardPile(color, types, special, settings): #shuffles and creates card deck
@@ -429,14 +449,6 @@ def checkAmountOfCards(playerList):
         return amount
 
 def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
-
-    def checkForPlus(card):
-        test = False
-        if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
-            test = True
-        elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
-            test = True
-        return test
 
     def listIndexOutOfRange(amount, playerlist):
         test = amount
@@ -769,13 +781,13 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
         if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
             stackedPlusCards += 4
             if turn != 1:
-                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCardID, player.effect)}")
             else:
                 print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
         elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
             stackedPlusCards += 2
             if turn != 1:
-                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCardID, player.effect)}")
             else:
                 print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
     if stackedPlusCards > 0:#if it was a + card, check how many of them are stacked
@@ -809,7 +821,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
             while loop == True:
                 try:
                     numberCard = int(input())
-                    if numberCard > -7 and numberCard <= len(player.cards ):#check if it's a card you have
+                    if numberCard > -8 and numberCard <= len(player.cards ):#check if it's a card you have
                         if numberCard == 0:
                             if (lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] == "4" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "1") or (lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "11" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] != "4"):
                                 win.append("+")
@@ -845,6 +857,8 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             playingDirection = playingDirection * len(playerList)
                             print(f"u deleted {player.number+ 1}, {player.name} from the game")
                             loop = False
+                        elif numberCard == -7:
+                            lookAtCards(playerList)
                         else:
                             numberCard -= 1
                             if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
