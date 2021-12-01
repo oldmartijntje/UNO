@@ -238,7 +238,10 @@ def rawSettingsToSettings(rawSettings): #turns settings into settings the progra
 
 def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards):
     lastPlayedCardName = cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)
-    print(f"The last player played {lastPlayedCardName}")
+    if turn != 1:
+        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
+    else:
+        print(f"The starting card is {lastPlayedCardName}")
     cardsInDeckString = ""
     for x in range(len(player.cards)):#show all your cards
         cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
@@ -268,7 +271,10 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                         else:
                             print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
                 elif numberCard == -4:
-                    print(f"The last player played {lastPlayedCardName}")
+                    if turn != 1:
+                        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
+                    else:
+                        print(f"The starting card is {lastPlayedCardName}")
                     cardsInDeckString = ""
                     for x in range(len(player.cards)):#show all your cards
                         cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
@@ -698,6 +704,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
+            historyOfCards.append("nothing, he grabbed a card")
         else:
             if len(win) > 1:
                 for i in range(len(win)-1):
@@ -716,6 +723,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
+            historyOfCards.append("nothing, he grabbed a card")
         else:
             if len(win) > 1:
                 for i in range(len(win)-1):
@@ -736,6 +744,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
         player.cards.remove(-1)
     except:
         pass
+    historyPlayersThatPlayedACard.append(f"{player.number +1}, {player.name}")
     print(f"player {player.number+ 1}, {player.name} played: {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1])}")
     if len(player.cards) == 0: win[0] = True
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
@@ -759,10 +768,16 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
     else:
         if int(lastPlayedCardID.split(".")[0]) == len(cardColors)-1 and lastPlayedCardID.split(".")[1] == '1':#check if it is a +4 card
             stackedPlusCards += 4
-            print(f"The last player played {lastPlayedCard}")
+            if turn != 1:
+                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+            else:
+                print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
         elif lastPlayedCardID.split(".")[1] == '11':#check if it is a +2 card
             stackedPlusCards += 2
-            print(f"The last player played {lastPlayedCard}")
+            if turn != 1:
+                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+            else:
+                print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
     if stackedPlusCards > 0:#if it was a + card, check how many of them are stacked
         check = 1
         for x in range(2, len(lastPlayedCards)):
@@ -815,7 +830,10 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 else:
                                     print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
                         elif numberCard == -4:
-                            print(f"The last player played {cardIdToName(lastPlayedCard, player.effect)}")
+                            if turn != 1:
+                                print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+                            else:
+                                print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
                             cardsInDeckString = ""
                             for x in range(len(player.cards)):#show all your cards
                                 cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
@@ -858,7 +876,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
     else:
         player, lastPlayedCards, playingDirection, win, playedCards = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards)
     if settings[4] > 1: input(f"that was your turn {player.name}\npress enter so the next player can play\n")
-    historyPlayersThatPlayedACard.append(player.name)
+    historyPlayersThatPlayedACard.append(f"{player.number +1}, {player.name}")
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
                 
           
