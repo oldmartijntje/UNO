@@ -1137,9 +1137,8 @@ try:
         statsCalculationForMultipleFinishers(mostTimesGrabbedFromPile, "cards grabbed from the card pile")
         print("-----Stats-----")
 
-
+    input("\nPress Enter To Close..")
 except Exception as e:
     print(f"seed: {setting[0]}")
     input(e)
 
-input("\nPress Enter To Close..")
