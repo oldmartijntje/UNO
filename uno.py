@@ -19,12 +19,18 @@ historyPlayersThatPlayedACard = list()
 
 class player(): #player and computer
     def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory, playerNumber) -> None:
+        amountBullied = 0
+        takenFromPile = 0
+        cardsGrabbed = 0
         self.name = userName
         self.cards = cardsDeck
         self.effect = statusEffects
         self.memory = memory
         self.type = playerOrComputer
         self.number = playerNumber
+        self.bullied = amountBullied
+        self.grabbedCard = cardsGrabbed
+        self.cardsFromPile = takenFromPile
 
 def pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames):
     ownPath = pathlib.Path().resolve()
@@ -94,7 +100,6 @@ def lookAtCards(listOfPlayers):
         for y in range(len(listOfPlayers[x].cards)):
             print(f"{listOfPlayers[x].number}, {listOfPlayers[x].name} has {cardIdToName(listOfPlayers[x].cards[y])}")
 
-
 def clear_console(): # clear the console
     try:
         os.system('cls')
@@ -109,6 +114,7 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
     if mode == 0 : print(f"you drew {amount} cards:")
     if mode == 1 : print(f"player {player.number + 1}, {player.name} drew {amount} cards")
     for x in range(amount):
+        playerListEndOfGame[player.number].cardsFromPile += 1    
         if len(cardPile) > 1:
             gift.append(cardPile[0])
             if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
@@ -273,6 +279,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                         player.cards.append(cardsForPlayer[x])
                     loop = False
                     historyOfCards.append("nothing, he grabbed a card")
+                    playerListEndOfGame[player.number].grabbedCard += 1
                 elif numberCard == -1:
                     print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user")
                 elif numberCard == -2:
@@ -450,10 +457,11 @@ def checkAmountOfCards(playerList):
 
 def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
 
-    def listIndexOutOfRange(amount, playerlist):
+    def listIndexOutOfRange(amount, playerList):
         test = amount
-        if test > len(playerList) -1: test -= len(playerList)
-        elif test < 0: test += len(playerList)
+        while test > len(playerList) -1 or test < 0:
+            if test > len(playerList) -1: test -= len(playerList)
+            elif test < 0: test += len(playerList)
         return test
 
     def transformWildIntoColorWild(card, bestColor):
@@ -522,7 +530,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
                         if len(lastCard.split('.')) == 3:
                             if testCard.split(".")[0] == lastCard.split('.')[2]:#if it's a playable colorcard
                                 if checkForPlus(testCard) == True:#check if it is an pluscard
-                                    if uno[player.number + playingDirection] <= 3:
+                                    if uno[listIndexOutOfRange(player.number + playingDirection, playerList)] <= 3:
                                         if testCard.split(".")[0] in bestColor:
                                             value.append(8)
                                         else:
@@ -605,6 +613,9 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
                             value.append(4)
         return valueList
 
+    #print(turn) #for if problems arise
+    #if turn == 334: #for if problems arise
+    #   print("placeholder") #for if problems arise
     uno = checkAmountOfCards(playerList)
     player.cards.append(-1)
     value = list()
@@ -612,9 +623,15 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
     bestColor = list()
     for x in range(len(cardColors)-1):#add 0 to list with color amount
         amountOfColor.append(0)
+    #if turn == 188: print(player.cards)
+    xx = 0
     for x in range(len(player.cards)-1):#check amount of cards of color
-        if int(player.cards[x].split(".")[0]) != len(cardColors) - 1:
-            amountOfColor[int(player.cards[x].split(".")[0])] += 1
+        if type(player.cards[xx]) == list:
+            player.cards.pop(xx)
+            xx -= 1
+        elif int(player.cards[xx].split(".")[0]) != len(cardColors) - 1:
+            amountOfColor[int(player.cards[xx].split(".")[0])] += 1
+        xx += 1
     for x in range(len(amountOfColor)):
         testForHighest = 1
         for y in range(len(amountOfColor)): 
@@ -658,6 +675,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
                 elif player.cards[x].split(".")[1] == '11':
                     yourAmountPlusCards[0] += 1
         if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
+            playerListEndOfGame[player.number].bullied += 1
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, lastPlayedCards, player, playedCards, 1))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
@@ -710,18 +728,20 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
 
 
     if len(bestChoice) > 1:
-        randomChosen = random.randint(0, len(bestChoice))
+        randomChosen = random.randint(0, len(bestChoice)-1)
         if player.cards[randomChosen] == -1:
             player.cards.remove(-1)
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
+            playerListEndOfGame[player.number].grabbedCard += 1
             historyOfCards.append("nothing, he grabbed a card")
         else:
             if len(win) > 1:
                 for i in range(len(win)-1):
                     win.pop(1)
             if checkForPlus(player.cards[randomChosen]) == False and stackedPlusCards > 0:
+                playerListEndOfGame[player.number].bullied += 1
                 player.cards.remove(-1)
                 cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
                 for x in range(len(cardsForPlayer)):
@@ -735,12 +755,14 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
+            playerListEndOfGame[player.number].grabbedCard += 1
             historyOfCards.append("nothing, he grabbed a card")
         else:
             if len(win) > 1:
                 for i in range(len(win)-1):
                     win.pop(1)
             if checkForPlus(player.cards[bestChoice[0]]) == False and stackedPlusCards > 0:
+                playerListEndOfGame[player.number].bullied += 1
                 player.cards.remove(-1)
                 cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards + 1, cards, lastPlayedCards, player, playedCards, 1))
                 for x in range(len(cardsForPlayer)):
@@ -809,6 +831,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                 yourAmountPlusCards[0] += 1
         if yourAmountPlusCards[0] + yourAmountPlusCards[1] == 0: #if you have no cards to counter the + card, automatically get the cards
             cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, lastPlayedCards, player, playedCards))
+            playerListEndOfGame[player.number].bullied += 1
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
             player, lastPlayedCards, playingDirection, win, playedCards = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards)
@@ -829,6 +852,8 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             for x in range(len(cardsForPlayer)):
                                 player.cards.append(cardsForPlayer[x])
                             loop = False
+                            playerListEndOfGame[player.number].grabbedCard += 1
+                            playerListEndOfGame[player.number].bullied += 1
                             historyOfCards.append("nothing, he grabbed a card")
                         elif numberCard == -1:
                             print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user")
@@ -874,6 +899,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 player.cards.pop(numberCard)
                                 loop = False
                             else:
+                                playerListEndOfGame[player.number].bullied += 1
                                 print("\nthe last player played a + card so we will grab your cards first, then you can choose which one to play\n")#get cards
                                 time.sleep(1)
                                 print(lastPlayedCards)
@@ -893,7 +919,32 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
     historyPlayersThatPlayedACard.append(f"{player.number +1}, {player.name}")
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
                 
-          
+def whoHasMost(compareList):
+    best = list()  
+    for x in range(len(compareList)):
+        testForHighest = 1
+        for y in range(len(compareList)): 
+            if compareList[x] < compareList[y]:
+                testForHighest = 0
+        if testForHighest == 1:
+            best.append(x)
+    return best
+
+def classDataToLists(list1, list2, list3):
+    for x in range(len(playerListEndOfGame)):
+        list1.append(playerListEndOfGame[x].cardsFromPile)
+        list2.append(playerListEndOfGame[x].bullied)
+        list3.append(playerListEndOfGame[x].grabbedCard)
+    return list1, list2, list3
+
+def statsCalculationForMultipleFinishers(var, words):
+    if len(whoHasMost(var)) == 1: 
+        print(f"The player who played the most {words} was:\n{playerListEndOfGame[whoHasMost(var)[0]].number}, {playerListEndOfGame[whoHasMost(var)[0]].name} with {var[whoHasMost(var)[0]]} {words}")
+    else:
+        print(f"the players that played the most {words} were:")
+        for x in range(len(whoHasMost(var))):
+            print(f"{playerListEndOfGame[whoHasMost(var)[x]].number}, {playerListEndOfGame[whoHasMost(var)[x]].name}")
+        print(f"with {var[whoHasMost(var)[0]]} {words}")
 
 #config thingys
 createConfig(ownPath)
@@ -912,24 +963,27 @@ colorblindCardColorsNames = ["a color", 'a color', 'a color', 'a color', 'black'
 cardColorsNames = ["red", 'blue', 'green', 'yellow', 'black']
 specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
-computerNameList = ['thomas', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
+computerNameList = ['thomas', 'thom', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
 'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
 'Ms.Kittens', 'attack helicopter', 'shell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin', 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet']
 colorblindNames = ['thomas', 'george', 'colorblind guy']
 cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames)
 #creating players
 playerList = list()
+playerListEndOfGame = list()
 for i in range(setting[4]):
     if setting[6] == True:
         while True:
             playerName = input(f"hello player number {len(playerList)+1}, what is your name?\n>>>")
             if playerName != "":
                 playerList.append(player(1, playerName, [], 0, [], len(playerList)))
+                playerListEndOfGame.append(player(1, playerName, [], 0, [], len(playerList)))
                 if playerList[len(playerList)-1].name.lower() in colorblindNames:
                     playerList[len(playerList)-1].effect = 1
                 break
     else:
         playerList.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
         if playerList[len(playerList)-1].name.lower() in colorblindNames and setting[8] == True:
             randomNumber = random.randint(0,100)
             if randomNumber > 85:#the colorblind effect
@@ -952,6 +1006,7 @@ for i in range(setting[4]):
 for i in range(setting[5]):
     if setting[1] != "Exercise":
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
         if playerList[len(playerList)-1].name.lower() in colorblindNames.lower() and setting[8] == True:
             randomNumber = random.randint(0,100)#the colorblind effect
             if randomNumber > 85:
@@ -962,6 +1017,7 @@ for i in range(setting[5]):
                 playerList[len(playerList)-1].effect = 1
     else:
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
 
     if random.randint(0,100) > 8 and setting[8] == True:#the colorblind effect
         randomNumber = random.randint(0,100)
@@ -983,8 +1039,30 @@ try:
     activePlayer = random.randint(0, len(playerList)-1)
 
     #the infinite loop which is called a game
+    answer = 0
     turn = 0
     win = [False]
+    #things for statitics
+    orderOfWinners = list()
+    amountOfPlayers = len(playerList)
+    wins = list()
+    mostPlayedColor = list()
+    mostPlusCards = list()
+    mostSkipCards = list()
+    mostReverseCards = list()
+    mostTimesGrabbedFromPile = list()
+    mostTimesBullied = list()
+    mostTimesGrabbedACardInsteadOfPlaying = list()
+    for x in range(len(cardColors)):
+        mostPlayedColor.append(0)
+    for x in range(len(playerList)):
+        mostPlusCards.append(0)
+        mostSkipCards.append(0)
+        mostReverseCards.append(0)
+    
+
+    showStats = False
+
     while win[0] == False:
         turn += 1
         
@@ -1000,10 +1078,68 @@ try:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = aiTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
         if playedCards[len(playedCards)-1].split(".")[1] == "12":#check for reverse card
             playerDirection = playerDirection * -1
+            mostReverseCards[playerList[activePlayer].number] += 1
         elif playedCards[len(playedCards)-1].split(".")[1] == "10":#check for skip card
             playerDirection = playerDirection * 2
-    print(f"player {playerList[activePlayer].number}, {playerList[activePlayer].name} is the winner, Congrats!!")
+            mostSkipCards[playerList[activePlayer].number] += 1
+        elif checkForPlus(playedCards[len(playedCards)-1]) == True:
+            mostPlusCards[playerList[activePlayer].number] += 1
+
+
+
+
+        if win[0] != False:
+            print(f"player {playerList[activePlayer].number}, {playerList[activePlayer].name} has 0 cards left, Congrats!!")
+            loop7 = True
+            wins.append([turn, f"{playerList[activePlayer].number}, {playerList[activePlayer].name}"])
+            if len(playerList) > 2 and answer == 0:
+                while loop7 == True:
+                    answer = input("do you want to continue with the other people? Y/N")
+                    if answer.lower() == "y":
+                        orderOfWinners.append(f"{playerList[activePlayer].number}, {playerList[activePlayer].name}")
+                        playerList.pop(activePlayer)
+                        win[0] = False
+                        loop7 = False
+                    if answer.lower() == "n":
+                        win[0] = True
+                        loop7 = False
+                        showStats = True
+            elif len(playerList) > 2:
+                orderOfWinners.append(f"{playerList[activePlayer].number}, {playerList[activePlayer].name}")
+                playerList.pop(activePlayer)
+                win[0] = False
+            elif answer != 0:
+                mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying = classDataToLists(mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying)
+                print("\n------Results-----\n")
+                for i in range(amountOfPlayers-2):
+                    print(f'player {orderOfWinners[i]} has finished at place nr {i+1}')
+                averageTurnsToWin = 0
+                for z in range(len(wins)):
+                    averageTurnsToWin += wins[z][0]
+                averageTurnsToWin = round(averageTurnsToWin / len(wins))
+                print(f"\n------Results-----\n\n\n-----Stats-----\nIt took {wins[0][0]} turns for the first player ({wins[0][1]}) to finish\nIt took {turn} turns for the last player ({wins[len(wins)-1][1]}) to finish")
+                print(f"The average turns needed to win: {averageTurnsToWin}")
+                statsCalculationForMultipleFinishers(mostPlusCards, "plus cards")
+                statsCalculationForMultipleFinishers(mostSkipCards, "skip cards")
+                statsCalculationForMultipleFinishers(mostReverseCards, "reverse cards")
+                statsCalculationForMultipleFinishers(mostTimesBullied, "times being bullied")
+                statsCalculationForMultipleFinishers(mostTimesGrabbedACardInsteadOfPlaying, "times grabbing a card instead of playing a card")
+                statsCalculationForMultipleFinishers(mostTimesGrabbedFromPile, "cards grabbed from the card pile")
+                print("-----Stats-----")
+    if showStats == True:
+        mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying = classDataToLists(mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying)
+        print(f'\n-----Stats-----\nIt took {wins[0][0]} turns to finish')
+        statsCalculationForMultipleFinishers(mostPlusCards, "plus cards")
+        statsCalculationForMultipleFinishers(mostSkipCards, "skip cards")
+        statsCalculationForMultipleFinishers(mostReverseCards, "reverse cards")
+        statsCalculationForMultipleFinishers(mostTimesBullied, "times being bullied")
+        statsCalculationForMultipleFinishers(mostTimesGrabbedACardInsteadOfPlaying, "times grabbing a card instead of playing a card")
+        statsCalculationForMultipleFinishers(mostTimesGrabbedFromPile, "cards grabbed from the card pile")
+        print("-----Stats-----")
+
+
 except Exception as e:
     print(f"seed: {setting[0]}")
     input(e)
 
+input("\nPress Enter To Close..")
