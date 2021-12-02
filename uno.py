@@ -114,28 +114,47 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
     if mode == 0 : print(f"you drew {amount} cards:")
     if mode == 1 : print(f"player {player.number + 1}, {player.name} drew {amount} cards")
     for x in range(amount):
-        playerListEndOfGame[player.number].cardsFromPile += 1    
-        if len(cardPile) > 1:
-            gift.append(cardPile[0])
-            if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
-            cardPile.pop(0)
-        else:#add the played pile to the new cards
-            placeholderList = list()
-            if mode == 0: print("shuffling cards...")
-            for y in range(1, len(lastPlayedCard)):
-                placeholderList.append(lastPlayedCard[1])
-                lastPlayedCard.pop(1)
-            for z in range(0, len(playedCards)):
-                placeholderList.append(playedCards[0])
-                playedCards.pop(0)
-            random.shuffle(placeholderList)
-            for x in range(len(placeholderList)):
-                cardPile.append(placeholderList[x])
-            if type(cardPile[0]) == list: cardPile = cardPile[0]
-            gift.append(cardPile[0])
-            if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
-            cardPile.pop(0)
-            
+        succes = True
+        while succes == True:
+            try:
+                playerListEndOfGame[player.number].cardsFromPile += 1    
+                if len(cardPile) > 1:
+                    gift.append(cardPile[0])
+                    if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
+                    cardPile.pop(0)
+                else:#add the played pile to the new cards
+                    placeholderList = list()
+                    if mode == 0: print("shuffling cards...")
+                    for y in range(1, len(lastPlayedCard)):
+                        placeholderList.append(lastPlayedCard[1])
+                        lastPlayedCard.pop(1)
+                    for z in range(0, len(playedCards)):
+                        placeholderList.append(playedCards[0])
+                        playedCards.pop(0)
+                    random.shuffle(placeholderList)
+                    for x in range(len(placeholderList)):
+                        cardPile.append(placeholderList[x])
+                    if type(cardPile[0]) == list: cardPile = cardPile[0]
+                    gift.append(cardPile[0])
+                    if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
+                    cardPile.pop(0)
+                succes = False
+            except Exception as e:
+                print(e)
+                succes = True
+                lookAtCards(playerList)
+                try:
+                    print(lastPlayedCard)
+                except:
+                    print("lastPlayedCard")
+                try:
+                    print( placeholderList)
+                except:
+                    print("placeholderList")
+                try:
+                    print(cardPile )
+                except:
+                    print('cardPile')
     return gift, cardPile, lastPlayedCard, playedCards
 
 def checkForUno(playerList, player):
@@ -525,7 +544,14 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
                     else:
                         valueList.append(-1)
                 else:#if it's a black card
-                    if testCard.split('.')[1] == '0' and int(testCard.split('.')[0]) == len(cardColors)-1:#if you played a wild
+                    if checkForPlus(testCard) == True:
+                        if uno[listIndexOutOfRange(player.number + playingDirection, playerList)] <= len(player.cards):
+                            
+                                valueList.append(7)
+                        else:
+                            
+                                valueList.append(3)
+                    elif testCard.split('.')[1] == '0' and int(testCard.split('.')[0]) == len(cardColors)-1:#if you played a wild
                         if lastCard.split('.')[0] in bestColor: 
                             valueList.append(1)
                         else:
@@ -556,39 +582,50 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
                                         else:
                                             valueList.append(1)
                                 elif testCard.split(".")[1] == "10":
-                                    if uno[listIndexOutOfRange(player.number + (2 * playingDirection), playerList)] >= uno[listIndexOutOfRange(player.number +  playingDirection, playerList)]:
-                                        if testCard.split(".")[0] in bestColor:
-                                            valueList.append(7)
-                                        else:
-                                            valueList.append(6)
-                                    else:
-                                        if testCard.split(".")[0] in bestColor:
-                                            valueList.append(2)
-                                        else:
-                                            valueList.append(1)
+                                    valueList.append(3)
                                 else:
-                                    if testCard.split(".")[0] in bestColor:
-                                        valueList.append(3)
-                                    else:
-                                        valueList.append(2)
-                        else:
-                            if int(testCard.split('.')[0]) == len(cardColors)-1 and testCard.split('.')[1] == '1':#check if it is an pluscard
-                                if uno[player.number + playingDirection] <= 3:
-                                    
-                                        valueList.append(7)
-                                else:
-                                    
-                                        valueList.append(4)
+                                    valueList.append(2)
                             else:
-
                                 valueList.append(-1)
+                    else:
+                        if checkForPlus(testCard) == True:#check if it is an pluscard
+                            if uno[player.number + playingDirection] <= 3:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(8)
+                                else:
+                                    valueList.append(7)
+                            else:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(5)
+                                else:
+                                    valueList.append(4)
+                        elif testCard.split(".")[1] == "12":
+                            if uno[listIndexOutOfRange(player.number + (-1 * playingDirection), playerList)] >= uno[listIndexOutOfRange(player.number +  playingDirection, playerList)]:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(6)
+                                else:
+                                    valueList.append(5)
+                            else:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(2)
+                                else:
+                                    valueList.append(1)
+                        elif testCard.split(".")[1] == "10":
+                            if uno[listIndexOutOfRange(player.number + (2 * playingDirection), playerList)] >= uno[listIndexOutOfRange(player.number +  playingDirection, playerList)]:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(7)
+                                else:
+                                    valueList.append(6)
+                            else:
+                                if testCard.split(".")[0] in bestColor:
+                                    valueList.append(2)
+                                else:
+                                    valueList.append(1)
+                        else:
+                            valueList.append(-1)
 
                         
-                    else: #if you play +4
-                        if uno[listIndexOutOfRange(player.number + playingDirection, playerList)] <= 3:
-                            valueList.append(6)
-                        else:
-                            valueList.append(4)
+                    
         return valueList
 
     #print(turn) #for if problems arise
@@ -596,7 +633,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
     #   print("placeholder") #for if problems arise
     uno = checkAmountOfCards(playerList)
     player.cards.append(-1)
-    value = list()
+    valueList = list()
     amountOfColor = list()
     bestColor = list()
     for x in range(len(cardColors)-1):#add 0 to list with color amount
@@ -658,47 +695,47 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
             win.append("+")
-            value = checkNormalTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor, 1)
+            valueList = checkNormalTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor, 1)
             stackedPlusCards = -1
         else:
             for x in range(len(player.cards)):#give value to cards
                 testCard = player.cards[x]
                 if testCard == -1:
-                    value.append(0)
+                    valueList.append(0)
                 else:
                     if int(testCard.split(".")[0]) == len(cardColors)-1 and testCard.split(".")[1] == "1":
                         if uno[listIndexOutOfRange(player.number + playingDirection, playerList)] <= 2:
-                            value.append(7)
+                            valueList.append(7)
                         else:
-                            value.append(4)
+                            valueList.append(4)
                     elif testCard.split(".")[1] == '11':
                         if testCard.split(".")[0] in bestColor:
-                            value.append(6)
+                            valueList.append(6)
                         else:
-                            value.append(5)
+                            valueList.append(5)
                     else:
                         if int(lastPlayedCardID.split(".")[0]) != len(cardColors)-1:#if it's a +2
                             if testCard.split(".")[0] == lastPlayedCardID.split(".")[0]:#if it's playable
                                 if testCard.split(".")[0] in bestColor: #if it's your fav color
-                                    value.append(3)
+                                    valueList.append(3)
                                 else:
-                                    value.append(2)
+                                    valueList.append(2)
                             else:
-                                value.append(-1)
+                                valueList.append(-1)
                         else:#if he played a wild
                             if testCard.split(".")[0] in bestColor: #if it's your fav color
-                                value.append(1)
+                                valueList.append(1)
                             else:
-                                value.append(0)
+                                valueList.append(0)
      
     else:
-        value = checkNormalTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor)
+        valueList = checkNormalTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, bestColor)
 
     bestChoice = list()#look what the best option is
-    for x in range(len(value)):
+    for x in range(len(valueList)):
         testForHighest = 1
-        for y in range(len(value)): 
-            if value[x] < value[y]:
+        for y in range(len(valueList)): 
+            if valueList[x] < valueList[y]:
                 testForHighest = 0
         if testForHighest == 1:
             bestChoice.append(x)
@@ -947,9 +984,9 @@ cardColorsNames = ["red", 'blue', 'green', 'yellow', 'black']
 specials = [0, 1]#the special cards, wild, draw 4
 specialsNames = ["wild", 'draw four']
 computerNameList = ['thomas', 'thom', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
-'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 'sexy buurvrouw', 
+'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 
 'Ms.Kittens', 'attack helicopter', 'mr Blue Sky','joe', 'kaas', 'peter quill','Nat','Loki','Nick Fury','Vision', 'Eather', 'Mind Stone', 'Power Stone','Tesseract','Wanda', 'Soul Stone', 'Time Stone',
-'Dr Strange','Coulson', 'Banner','Peter Parker','Tony Stark', 'Scott Lang','pjotter', 'Thanos', 'Thor', 'GLaDOS', 'shell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin',
+'Dr Strange','Coulson', 'Banner','Peter Parker','Tony Stark', 'Scott Lang','pjotter', 'Thanos', 'Thor', 'GLaDOS', 'chell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin',
 'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet','Gamora','Why Is Gamora?','I Am Groot','Rocket Raccoon','KORG',
 'Nebula' ,'Drax','Hugo de Jonge','thierry baudet','Jesse Klaver','Agent Carter','Misterio','Captain Marvel','Odin','Stan Lee','Fits', 'Hawk Eye','Sky','Black Panther','Jemma Simmons', '', 'Quick silver','Wolverine', 'Deadpool','Flash','SuperMan','Batman','Mantis']
 colorblindNames = ['thomas', 'george', 'colorblind guy','thierry baudet']
