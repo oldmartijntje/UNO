@@ -155,6 +155,7 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
                     print(cardPile )
                 except:
                     print('cardPile')
+                input()
     return gift, cardPile, lastPlayedCard, playedCards
 
 def checkForUno(playerList, player):
