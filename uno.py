@@ -122,23 +122,29 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
                     gift.append(cardPile[0])
                     if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
                     cardPile.pop(0)
+                    succes = False
                 else:#add the played pile to the new cards
                     placeholderList = list()
-                    if mode == 0: print("shuffling cards...")
-                    for y in range(1, len(lastPlayedCard)):
-                        placeholderList.append(lastPlayedCard[1])
-                        lastPlayedCard.pop(1)
+                    print("shuffling cards...")
+                    if len(lastPlayedCard) > 1:
+                        for y in range(1, len(lastPlayedCard)):
+                            placeholderList.append(lastPlayedCard[1])
+                            lastPlayedCard.pop(1)
                     for z in range(0, len(playedCards)):
                         placeholderList.append(playedCards[0])
                         playedCards.pop(0)
-                    random.shuffle(placeholderList)
-                    for x in range(len(placeholderList)):
-                        cardPile.append(placeholderList[x])
-                    if type(cardPile[0]) == list: cardPile = cardPile[0]
-                    gift.append(cardPile[0])
-                    if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
-                    cardPile.pop(0)
-                succes = False
+                    if len(placeholderList) == 0:
+                        print("there are 0 cards left on the pile to give")
+                        succes = False
+                        return gift, cardPile, lastPlayedCard, playedCards
+                    else:
+                        random.shuffle(placeholderList)
+                        for x in range(len(placeholderList)):
+                            cardPile.append(placeholderList[x])
+                        if type(cardPile[0]) == list: cardPile = cardPile[0]
+                        gift.append(cardPile[0])
+                        if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
+                        cardPile.pop(0)
             except Exception as e:
                 print(e)
                 succes = True
