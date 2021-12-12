@@ -34,10 +34,11 @@ class player(): #player and computer
         self.cardsFromPile = takenFromPile
 
 def saveAnState(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
+    ownPath = pathlib.Path().resolve()
     allDataTogether = [player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn]
     allListsInOne = [cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames]
     old_state = random.getstate()
-    statistics = [mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame]
+    statistics = [mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards]
     allInOne = [allDataTogether, allListsInOne, old_state, statistics]
     name = input("what do you want to call the save state (it will not overwrite existing ones)")
     newName = name
@@ -45,19 +46,20 @@ def saveAnState(player, cards, lastPlayedCards, playerList, settings, playingDir
     while os.path.isfile(f"{newName}.UNOSAV"):
         looped += 1
         newName = name + f"({looped})"
-    print(f"it will now save to {newName}.UNOSAV")
+    print(f"it will now save to {ownPath}/my_saves/{newName}.UNOSAV")
     try:
-        pickle.dump( allInOne, open( f"{newName}.UNOSAV", "wb" ) )
+        pickle.dump( allInOne, open( f"{ownPath}/my_saves/{newName}.UNOSAV", "wb" ) )
         print("it correctly saved")
     except Exception as e:
         print(e)
         print("it failed")
 
 def loadAnState():
+    ownPath = pathlib.Path().resolve()
     name = input("what save state do you want to open? (only say the name, we put .UNOSAV behind it ourselves)")
-    if os.path.isfile(f"{name}.UNOSAV"):
+    if os.path.isfile(f"{ownPath}/my_saves/{name}.UNOSAV"):
         print("okay, please wait")
-        returnedValues = pickle.load( open( f"{name}.UNOSAV", "rb" ))
+        returnedValues = pickle.load( open( f"{ownPath}/my_saves/{name}.UNOSAV", "rb" ))
         return returnedValues
     else:
         print("that is not a file, please try again")
@@ -68,17 +70,24 @@ def loadedStateToData(loadedData):
         allDataTogether, allListsInOne, old_state, statistics = loadedData
         player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn = allDataTogether
         cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames = allListsInOne
-        mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame = statistics
+        mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards = statistics
+        extra = [cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames,mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards]
         random.setstate(old_state)
+        if type(lastPlayedCards) != list:
+            lastPlayedCardss = list()
+            lastPlayedCardss.append(lastPlayedCards)
+            return player, cards, lastPlayedCardss, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra
     except Exception as e:
         print(e)
         print(f"seed: {setting[0]}")
         print(f"maybe loaded seed: {settings[0]}")
-    return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn
+    return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra
 
-def saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
+def saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = []):
     print("\nWelcome to the Savestate menu, here you can pause your game and continue it next time")
     print("you can create infinite save states\nyou can load save states, even if they have other settings, the settings will automatically change to how it was saved")
+    if not os.path.exists('my_saves'):
+        os.makedirs('my_saves')
     loop3 = True
     while loop3 == True:
         try:
@@ -94,12 +103,12 @@ def saveStates(player, cards, lastPlayedCards, playerList, settings, playingDire
             elif optionChosen == 2:
                 loaded = loadAnState()
                 if loaded != False:
-                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn = loadedStateToData(loaded)
+                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = loadedStateToData(loaded)
                     loop3 = False
         else:
             print("that is not an option")
         
-    return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn
+    return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra
 
 def pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames):
     ownPath = pathlib.Path().resolve()
@@ -352,7 +361,7 @@ def checkForPlus(card):
             test = True
         return test
 
-def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn):
+def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra = []):
     lastPlayedCardName = cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)
     if turn != 1:
         print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
@@ -405,7 +414,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     historyOfCards.append("nothing, he disconnected")
                     loop = False
                 elif numberCard == -7:
-                    player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn)
+                    player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra)
                     print("don't forget that u need to do -4 again to show ur options")
                 elif numberCard == -8:
                     for xyz in range(len(player.cards)):
@@ -550,7 +559,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
         for x in range(len(lastPlayedCard)-1):
             playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
             lastPlayedCard.pop(len(lastPlayedCard)-2)
-    return player, lastPlayedCard, playingDirection, win, playedPlusCards, turn
+    return player, lastPlayedCard, playingDirection, win, playedPlusCards, turn, extra, playerList
 
 def setupCardPile(color, types, special, settings): #shuffles and creates card deck
     cardPile = list()
@@ -897,7 +906,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
     if len(player.cards) == 0: win[0] = True
     return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
 
-def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
+def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = []):
 
     
     stackedPlusCards = 0
@@ -945,7 +954,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
             playerListEndOfGame[player.number].bullied += 1
             for x in range(len(cardsForPlayer)):
                 player.cards.append(cardsForPlayer[x])
-            player, lastPlayedCards, playingDirection, win, playedCards, turn = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn)
+            player, lastPlayedCards, playingDirection, win, playedCards, turn, extra, playerList= chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
         else:
             cardsInDeckString = ""
             for x in range(len(player.cards)):#show all your cards
@@ -995,7 +1004,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             historyOfCards.append("nothing, he disconnected")
                             loop = False
                         elif numberCard == -7:
-                            player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn)
+                            player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
                             print("don't forget that u need to do -4 again to show ur options")
                         elif numberCard == -8:
                             for xyz in range(len(player.cards)):
@@ -1043,7 +1052,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 cardsForPlayer, cards, lastPlayedCards, playedCards = (takeCardFromDeck(stackedPlusCards, cards, lastPlayedCards, player, playedCards))
                                 for x in range(len(cardsForPlayer)):#add cards to his deck
                                     player.cards.append(cardsForPlayer[x])
-                                player, lastPlayedCards, playingDirection, win, playedCards, turn = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn)
+                                player, lastPlayedCards, playingDirection, win, playedCards, turn, extra, playerList = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
                                 loop = False
                     else:
                         print("that is not a card you have")
@@ -1051,12 +1060,12 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                     print("try a number")
                     print(e)
     else:
-        player, lastPlayedCards, playingDirection, win, playedCards, turn = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn)
+        player, lastPlayedCards, playingDirection, win, playedCards, turn, extra, playerList= chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
     if settings[4] > 1: input(f"that was your turn {player.name}\npress enter so the next player can play\n")
     historyPlayersThatPlayedACard.append(f"{player.number +1}, {player.name}")
     if len(player.cards) == 0:
         win[0] = True
-    return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards
+    return cards, lastPlayedCards, playerList, settings, playingDirection, win, playedCards, extra
                 
 def whoHasMost(compareList):
     best = list()  
@@ -1210,7 +1219,7 @@ try:
         mostReverseCards.append(0)
     
 
-
+    extra = []
     showStats = False
 
     while win[0] == False:
@@ -1226,9 +1235,12 @@ try:
         else:
             playerDirection = -1
         if playerList[activePlayer].type == 1:
-            cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
+            cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards, extra = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
         else:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = aiTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
+        if extra != []:
+            cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames,mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards = extra
+            extra = []
         if playedCards[len(playedCards)-1].split(".")[1] == "12" and historyOfCards[len(historyOfCards)-1] != "nothing, he grabbed a card" and historyOfCards[len(historyOfCards)-1] != "nothing, he disconnected":#check for reverse card
             playerDirection = playerDirection * -1
             mostReverseCards[playerList[activePlayer].number] += 1

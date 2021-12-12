@@ -6,6 +6,7 @@ __pycache__/
 ### Format1  ###
 newGithubUpdater.bat
 Config.ini
+my_saves/
 
 # C extensions
 *.so
