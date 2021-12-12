@@ -413,7 +413,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                 elif numberCard == -9:
                     player.effect = 0
                 elif numberCard == -10:
-                    print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has")
+                    print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings")
                 elif numberCard == -11:
                     randomNumber = random.randint(0,100)
                     if randomNumber > 85:#the colorblind effect
@@ -429,6 +429,8 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     player.cards.append(adding)
                 elif numberCard == -14:
                     lookAtCards(playerList)
+                elif numberCard == -15:
+                    print(settings)
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -1001,7 +1003,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                         elif numberCard == -9:
                             player.effect = 0
                         elif numberCard == -10:
-                            print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has")
+                            print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings")
                         elif numberCard == -11:
                             randomNumber = random.randint(0,100)
                             if randomNumber > 85:#the colorblind effect
@@ -1017,6 +1019,8 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             player.cards.append(adding)
                         elif numberCard == -14:
                             lookAtCards(playerList)
+                        elif numberCard == -15:
+                            print(settings)
                         else:
                             numberCard -= 1
                             if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
