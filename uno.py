@@ -3,6 +3,7 @@ import pathlib
 import random
 import time
 import ast
+import pickle
 from datetime import datetime
 
 pluginEquipped = False
@@ -32,9 +33,72 @@ class player(): #player and computer
         self.grabbedCard = cardsGrabbed
         self.cardsFromPile = takenFromPile
 
+def saveAnState(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
+    allDataTogether = [player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn]
+    allListsInOne = [cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames]
+    old_state = random.getstate()
+    statistics = [mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame]
+    allInOne = [allDataTogether, allListsInOne, old_state, statistics]
+    name = input("what do you want to call the save state (it will not overwrite existing ones)")
+    newName = name
+    looped = 0
+    while os.path.isfile(f"{newName}.UNOSAV"):
+        looped += 1
+        newName = name + f"({looped})"
+    print(f"it will now save to {newName}.UNOSAV")
+    try:
+        pickle.dump( allInOne, open( f"{newName}.UNOSAV", "wb" ) )
+        print("it correctly saved")
+    except Exception as e:
+        print(e)
+        print("it failed")
+
+def loadAnState():
+    name = input("what save state do you want to open? (only say the name, we put .UNOSAV behind it ourselves)")
+    if os.path.isfile(f"{name}.UNOSAV"):
+        print("okay, please wait")
+        returnedValues = pickle.load( open( f"{name}.UNOSAV", "rb" ))
+        return returnedValues
+    else:
+        print("that is not a file, please try again")
+        return False
+
+def loadedStateToData(loadedData):
+    try:
+        allDataTogether, allListsInOne, old_state, statistics = loadedData
+        player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn = allDataTogether
+        cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames = allListsInOne
+        mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame = statistics
+        random.setstate(old_state)
+    except Exception as e:
+        print(e)
+        print(f"seed: {setting[0]}")
+        print(f"maybe loaded seed: {settings[0]}")
+    return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn
+
 def saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
     print("\nWelcome to the Savestate menu, here you can pause your game and continue it next time")
     print("you can create infinite save states\nyou can load save states, even if they have other settings, the settings will automatically change to how it was saved")
+    loop3 = True
+    while loop3 == True:
+        try:
+            optionChosen = int(input("what do you want to do?\n1.save\n2.load\n3.go back\n>>>"))
+        except Exception as e:
+            print(e)
+        if optionChosen > 0 and optionChosen < 4:
+            if optionChosen == 3:
+                return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn
+            elif optionChosen == 1:
+                saveAnState(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn)
+                loop3 = False
+            elif optionChosen == 2:
+                loaded = loadAnState()
+                if loaded != False:
+                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn = loadedStateToData(loaded)
+                    loop3 = False
+        else:
+            print("that is not an option")
+        
     return player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn
 
 def pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames):
@@ -342,6 +406,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     loop = False
                 elif numberCard == -7:
                     player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn)
+                    print("don't forget that u need to do -4 again to show ur options")
                 elif numberCard == -8:
                     for xyz in range(len(player.cards)):
                         player.cards.pop(0)
@@ -929,6 +994,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             loop = False
                         elif numberCard == -7:
                             player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn)
+                            print("don't forget that u need to do -4 again to show ur options")
                         elif numberCard == -8:
                             for xyz in range(len(player.cards)):
                                 player.cards.pop(0)
@@ -1168,7 +1234,7 @@ try:
         elif checkForPlus(playedCards[len(playedCards)-1]) == True:
             mostPlusCards[playerList[activePlayer].number] += 1
 
-
+    
 
 
         if win[0] != False:
