@@ -297,7 +297,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
     while loop == True:
         try:
             numberCard = int(input())
-            if numberCard > -9 and numberCard <= len(player.cards):#if he chose an existing card
+            if numberCard > -14 and numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
                     if (lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] == "4" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "1") or (lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "11" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] != "4"):
                         win.append("+")
@@ -339,6 +339,23 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                 elif numberCard == -8:
                     for xyz in range(len(player.cards)):
                         player.cards.pop(0)
+                elif numberCard == -9:
+                    player.effect = 0
+                elif numberCard == -10:
+                    print("admin Tools:\n-7 to see which cards everyone has\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck")
+                elif numberCard == -11:
+                    randomNumber = random.randint(0,100)
+                    if randomNumber > 85:#the colorblind effect
+                        player.effect = 3
+                    elif randomNumber > 44:
+                        player.effect = 2
+                    else:
+                        player.effect = 1
+                elif numberCard == -12:
+                    win[0] = True
+                elif numberCard == -13:
+                    adding = input("input ID\n>>>")
+                    player.cards.append(adding)
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -807,10 +824,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
 
 def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
 
-    if playingDirection > 0:
-        playingDirection = 1
-    else:
-        playingDirection = -1
+    
     stackedPlusCards = 0
 
     lastPlayedCard = cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)
@@ -866,7 +880,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
             while loop == True:
                 try:
                     numberCard = int(input())
-                    if numberCard > -9 and numberCard <= len(player.cards ):#check if it's a card you have
+                    if numberCard > -14 and numberCard <= len(player.cards ):#check if it's a card you have
                         if numberCard == 0:
                             if (lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] == "4" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "1") or (lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "11" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] != "4"):
                                 win.append("+")
@@ -909,6 +923,23 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                         elif numberCard == -8:
                             for xyz in range(len(player.cards)):
                                 player.cards.pop(0)
+                        elif numberCard == -9:
+                            player.effect = 0
+                        elif numberCard == -10:
+                            print("admin Tools:\n-7 to see which cards everyone has\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck")
+                        elif numberCard == -11:
+                            randomNumber = random.randint(0,100)
+                            if randomNumber > 85:#the colorblind effect
+                                player.effect = 3
+                            elif randomNumber > 44:
+                                player.effect = 2
+                            else:
+                                player.effect = 1
+                        elif numberCard == -12:
+                            win[0] = True
+                        elif numberCard == -13:
+                            adding = input("input ID\n>>>")
+                            player.cards.append(adding)
                         else:
                             numberCard -= 1
                             if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
@@ -959,19 +990,25 @@ def whoHasMost(compareList):
 
 def classDataToLists(list1, list2, list3):
     for x in range(len(playerListEndOfGame)):
-        list1.append(playerListEndOfGame[x].cardsFromPile)
-        list2.append(playerListEndOfGame[x].bullied)
-        list3.append(playerListEndOfGame[x].grabbedCard)
+        try:
+            list1.append(playerListEndOfGame[x].cardsFromPile)
+            list2.append(playerListEndOfGame[x].bullied)
+            list3.append(playerListEndOfGame[x].grabbedCard)
+        except Exception as e:
+            print(e)
     return list1, list2, list3
 
 def statsCalculationForMultipleFinishers(var, words):
-    if len(whoHasMost(var)) == 1: 
-        print(f"The player who played the most {words} was:\n{playerListEndOfGame[whoHasMost(var)[0]].number}, {playerListEndOfGame[whoHasMost(var)[0]].name} with {var[whoHasMost(var)[0]]} {words}")
-    else:
-        print(f"the players that played the most {words} were:")
-        for x in range(len(whoHasMost(var))):
-            print(f"{playerListEndOfGame[whoHasMost(var)[x]].number}, {playerListEndOfGame[whoHasMost(var)[x]].name}")
-        print(f"with {var[whoHasMost(var)[0]]} {words}")
+    try:
+        if len(whoHasMost(var)) == 1: 
+            print(f"The player who played the most {words} was:\n{playerListEndOfGame[whoHasMost(var)[0]].number}, {playerListEndOfGame[whoHasMost(var)[0]].name} with {var[whoHasMost(var)[0]]} {words}")
+        else:
+            print(f"the players that played the most {words} were:")
+            for x in range(len(whoHasMost(var))):
+                print(f"{playerListEndOfGame[whoHasMost(var)[x]].number}, {playerListEndOfGame[whoHasMost(var)[x]].name}")
+            print(f"with {var[whoHasMost(var)[0]]} {words}")
+    except:
+        print(f"crashed whilst trying to load stats about {words}")
 
 #config thingys
 createConfig(ownPath)
@@ -1092,25 +1129,29 @@ try:
         mostReverseCards.append(0)
     
 
+
     showStats = False
 
     while win[0] == False:
         turn += 1
-        
         activePlayer += playerDirection#for the next turn, also controls skips and reverse
         while activePlayer < 0 or activePlayer >= len(playerList):
             if activePlayer > len(playerList)-1:
                 activePlayer -= len(playerList)
             elif activePlayer < 0:
                 activePlayer += len(playerList)
+        if playerDirection > 0:
+            playerDirection = 1
+        else:
+            playerDirection = -1
         if playerList[activePlayer].type == 1:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = playerTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
         else:
             cards, playedCards, playerList, settings, playerDirection, win, playedPlusCards = aiTurn(playerList[activePlayer], cardDeck, playedCardsPile, playerList, setting, playerDirection, activePlayer, win, playedPlusCards, turn)
-        if playedCards[len(playedCards)-1].split(".")[1] == "12":#check for reverse card
+        if playedCards[len(playedCards)-1].split(".")[1] == "12" and historyOfCards[len(historyOfCards)-1] != "nothing, he grabbed a card":#check for reverse card
             playerDirection = playerDirection * -1
             mostReverseCards[playerList[activePlayer].number] += 1
-        elif playedCards[len(playedCards)-1].split(".")[1] == "10":#check for skip card
+        elif playedCards[len(playedCards)-1].split(".")[1] == "10" and historyOfCards[len(historyOfCards)-1] != "nothing, he grabbed a card":#check for skip card
             playerDirection = playerDirection * 2
             mostSkipCards[playerList[activePlayer].number] += 1
         elif checkForPlus(playedCards[len(playedCards)-1]) == True:
@@ -1141,13 +1182,22 @@ try:
                 win[0] = False
             elif answer != 0:
                 print("\n------Results-----\n")
-                for i in range(amountOfPlayers-2):
-                    print(f'player {orderOfWinners[i]} has finished at place nr {i+1}')
+                for i in range(len(orderOfWinners)):
+                    try:
+                        print(f'player {orderOfWinners[i]} has finished at place nr {i+1}')
+                    except Exception as e:
+                        print(e)
                 averageTurnsToWin = 0
                 for z in range(len(wins)):
-                    averageTurnsToWin += wins[z][0]
-                averageTurnsToWin = round(averageTurnsToWin / len(wins))
-                print(f"The average turns needed to win: {averageTurnsToWin}")
+                    try:
+                        averageTurnsToWin += wins[z][0]
+                    except Exception as e:
+                        print(e)
+                try:
+                    averageTurnsToWin = round(averageTurnsToWin / len(wins))
+                    print(f"The average turns needed to win: {averageTurnsToWin}")
+                except Exception as e:
+                    print(e)
                 mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying = classDataToLists(mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying)
                 print(f"\n------Results-----\n\n\n-----Stats-----\nIt took {wins[0][0]} turns for the first player ({wins[0][1]}) to finish\nIt took {turn} turns for the last player ({wins[len(wins)-1][1]}) to finish")
                 statsCalculationForMultipleFinishers(mostPlusCards, "plus cards")
@@ -1156,7 +1206,7 @@ try:
                 statsCalculationForMultipleFinishers(mostTimesBullied, "times being bullied")
                 statsCalculationForMultipleFinishers(mostTimesGrabbedACardInsteadOfPlaying, "times grabbing a card instead of playing a card")
                 statsCalculationForMultipleFinishers(mostTimesGrabbedFromPile, "cards grabbed from the card pile")
-                print(f"The game started at{startTime}, it finished at {datetime.now()}")
+                print(f"The game started at {startTime}, it finished at {datetime.now()}")
                 print("-----Stats-----")
     if showStats == True:
         mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying = classDataToLists(mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying)
@@ -1167,7 +1217,7 @@ try:
         statsCalculationForMultipleFinishers(mostTimesBullied, "times being bullied")
         statsCalculationForMultipleFinishers(mostTimesGrabbedACardInsteadOfPlaying, "times grabbing a card instead of playing a card")
         statsCalculationForMultipleFinishers(mostTimesGrabbedFromPile, "cards grabbed from the card pile")
-        print(f"The game started at{startTime}, it finished at {datetime.now()}")
+        print(f"The game started at {startTime}, it finished at {datetime.now()}")
         print("-----Stats-----")
 
     input("\nPress Enter To Close..")
