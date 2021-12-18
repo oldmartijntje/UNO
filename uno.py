@@ -19,7 +19,7 @@ historyPlayersThatPlayedACard = list()
 #settings: seed0, difficulty1, normal cards2, special cards3, player amount4, starting cards5
 
 class player(): #player and computer
-    def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory, playerNumber) -> None:
+    def __init__(self, playerOrComputer, userName, cardsDeck, statusEffects, memory, playerNumber, difficulty = 'Exercise') -> None:
         amountBullied = 0
         takenFromPile = 0
         cardsGrabbed = 0
@@ -32,6 +32,7 @@ class player(): #player and computer
         self.bullied = amountBullied
         self.grabbedCard = cardsGrabbed
         self.cardsFromPile = takenFromPile
+        self.difficulty = difficulty
 
 def saveAnState(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn):
     ownPath = pathlib.Path().resolve()
@@ -72,6 +73,7 @@ def loadedStateToData(loadedData):
         cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames = allListsInOne
         mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards = statistics
         extra = [cardTypes,cardTypesNames,cardColors,yellowGreenColorblindCardColorsNames,blueRedColorblindCardColorsNames,colorblindCardColorsNames,cardColorsNames,specials,specialsNames,mostPlayedColor, mostPlusCards, mostSkipCards, mostReverseCards, mostTimesGrabbedFromPile, mostTimesBullied, mostTimesGrabbedACardInsteadOfPlaying, orderOfWinners, wins, playerListEndOfGame, historyPlayersThatPlayedACard, historyOfCards]
+        random.seed(settings[0])
         random.setstate(old_state)
         if type(lastPlayedCards) != list:
             lastPlayedCardss = list()
@@ -432,6 +434,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     else:
                         player.effect = 1
                 elif numberCard == -12:
+                    print("okay, now u still gotta play a card tho")
                     win[0] = True
                 elif numberCard == -13:
                     adding = input("input ID\n>>>")
@@ -1022,6 +1025,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             else:
                                 player.effect = 1
                         elif numberCard == -12:
+                            print("okay, now u still gotta play a card tho")
                             win[0] = True
                         elif numberCard == -13:
                             adding = input("input ID\n>>>")
