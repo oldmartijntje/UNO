@@ -1124,10 +1124,21 @@ specialsNames = ["wild", 'draw four']
 computerNameList = ['thomas', 'thom', 'muik', 'coen', 'staninna', 'stijn', 'florida man', 'mandrex', 'bob', 'grian', 'mumbo jumbo', 'scar', '[CLASSEFIED]', 'george',
 'lianne', 'tommy', 'tiffany', 'katie', 'jase', 'lennert', 'mellodie', 'mark rutte', 'Master of scares', 'Null', 'Herobrine', 'None', 'Undefined', 'liam', 'anne', 'colorblind guy', 
 'Ms.Kittens', 'attack helicopter', 'mr Blue Sky','joe','Vogeljongen', 'kaas', 'peter quill','Nat','Loki','Nick Furry','Vision', 'Eather', 'Mind Stone', 'Power Stone','Tesseract','Wanda', 'Soul Stone', 'Time Stone',
-'Dr Strange','Coulson', 'Banner','Peter Parker','Tony Stark', 'Scott Lang','pjotter', 'Thanos', 'Thor', 'GLaDOS', 'chell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin',
-'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet','Gamora','Why Is Gamora?','I Am Groot','Rocket Raccoon','KORG',
-'izuku','bakugo','uraraka','iida','mineta','todoroki','Eris','Sylphiette','Rudeus','Roxy','Tomori','Ruijerd','neko',
-'Nebula' ,'Drax','Hugo de Jonge','thierry baudet','Jesse Klaver','Djoopie','MisterPringleMan','Agent Carter','Misterio','Captain Marvel','Odin','Stan Lee','Fitz', 'Hawk Eye','Skye','Black Panther','Jemma Simmons', '', 'Quick silver','Wolverine', 'Deadpool','Flash','SuperMan','Batman','Mantis']
+'Dr Strange','Coulson', 'Banner','Peter Parker','Tony Stark', 'Scott Lang','pjotter', 'Thanos', 'Thor', 'GLaDOS', 'chell', 'Phileine', 'emiel', 'twan', 'david', 'joelia', 'sneal', 'pieter', 'merijn', 'marjin','ScuttleBug','Coin','Skeeter','Snailcorn','Snow Spike','Fire Piranha','Spike Bass','Sushi','Bee Mario','Fly Mario','Ice Mario','Ranbow Mario','Luma','Rosalina','Honeybee',
+'oldmartijntje', 'martijn', 'mercury', 'lara', 'steve jobs', 'mark zuckerburg', 'elon musk', 'sinterklaas', 'bart', 'ewood', 'mathijs', 'joris', 'zwarte piet','Gamora','Why Is Gamora?','I Am Groot','Rocket Raccoon','KORG','Crowber','Dry Bowser','Fury Bowser','Cat Bowser','Lakithunder','Clone Mario','MummiPokey','Monty Tank',
+'izuku','bakugo','uraraka','iida','mineta','todoroki','Eris','Sylphiette','Rudeus','Roxy','Tomori','Ruijerd','neko','Dr Octopus','NoobSlayer69','Jeb_','DinnerBone','debaas','Goomba','smurf','bomb-omb','koopa','luigi','daisy','Thwomp','Frog Mario','Cheep Chomp','BlockHopper','Unagi','Boo Mario','Spring Mario',
+'peach','piranha','Waluigi','shy-guy','toadette','king bob-omb','yoshi','Bullet Bill','birdo','banzai bill','Bowser','Cheep Cheep','chargin\' chuck','Buzzy Beetle','Dry Bones','Fish Bone','Fuzzle','Larry','Iggy','Lemmy','Ludwig','Morton','Roy','Wendy','Prinsess Toadstool','Mega Mole','Bowser jr','Fuzzy','Kamek',
+'Blargg','Hammer Brother','Blurp','Dino-Rhino','Magikoopa','Pokey','Montey Mole','Ninji','Muncher','Porcupuffer','Rex','Reznor','Spiny','Sumo Brother','Swooper','Big Boo','Thwimp','Urchin','Wiggler','Boomerang Boom','Boom-Boom','FireBro','Chain Chomp','Balloon Mario','Raccoon Mario','Shoe Mario','Hammer Mario','P-Wing',
+'Fire Chomp','Ice Bro','Spike','Rocky Wrench','Wart','Behemot King','Snifit','Phanto','Pidgit','Blooper','Lakitu','Geno','Hoot','Tuxie','Dorrie','Koopa the quick','Mips','Toad','Ukkiki','Big Bully','Bully','Wing Mario','Vanish Mario','Metal Mario','Bunny Mario','Space Mario','Aqua MarioBubble Mario','Cappy','Cape Mario',
+'Coud Mario','Rock Mario','Spin Drill','White Tanooki Mario','Statue Mario','Propeller Box','? Box','Gold Block','White Raccoon Mario','Magmaargh','Double Mario','Elder Princess Shroob','Fawful','Kylie Koopa','Princess Shroob','Professor E. Gadd','Elvin Gadd','Shroob','Stuffwell','Toadiko','Toadbert','Yoob','Toad Doctor',
+'Blue Toad','Spin Drift','Motos','Piantas','Shadow Luigi','Pink-gold peach','Invincible Mario','Mini Mario','Mega Mario','Shell Mario','Cat Mario','Cosmic Mario','Fire Mario','Propeller Mario','Ice Mario','Gold Mario','Pinguin mario','Tanuki Mario','Toadsworth','Fludd','Petey Piranha','Shadow Mario','Klepto','Wriggler','Whomp King','Whomp','Money Bag','EyeRock','Amp',
+'Shrooblet','Boom Guy','Koopeleon','Boo Guy','Elasto-Piranha','Spiny Shroopa','Lakitufo','Dr. Shroob','Pidgit','Coconutter','Galoomba','Gnarantula','RC Shroober','Shrooba Diver','Dark Boo','Snifaro','Elite Boom Guy','Thwack','Tanoomba','Red Coconutter','Gold Koopeleon','	Blazing Shroob',
+'Aurora Block','Popple','Blue switch','Dr Snoozemore','Control Block','Empty Block','L Block','Laser Block','M Block','Pi\'illoper','Recovery Block','Save Album','Simu-Block','Small Shine Block',
+'Ice Flower','Cannonball','Wiggly','Bros. Flower','Green Shell','Dreambunny','Mushroom','Super Mushroom','Mega Phil','Ultra Mushroom','Max Mushroom','Mega Lowe','Mole Hunt Host','Mushroom Drop','Super Drop',
+'Ultra Drop','Private Goomp','1-up Mushroom','1-up Super','Corporal Paraplonk','Refreshing Herb','Green Pepper','Red Pepper','Antasma','Lil\' Massif','Bedsmith','Big Massif','Luiginoid','Blue Pepper','Dream stone\'s spirit',
+'Price Dreambert','Time hole','Brickle','Trampoline','Treasure chest','Warp block','Eldream','Warp Pipe','Yellow switch','Hooski','Zeekeeper','Bros. Ball.','Starlow','Cush','Brock','Britta','Nommon','Mix Flower','Red Shell','Copy Flower','Seabury','Seabelle','Pocket Chomp','Smash Egg','Seadring','Shelltop',
+'Thwack Totem','Guardian Shroob','Shroid','Love Bubble','Skellokey','Handfake','Fly Guy','Piranha Planet','Wonder Thwack','Tashrooba','Snoozorb','','Soul Bubble','Shroob Rex','Shroobsworth','Intern Shroob','Ghoul Guy','Lethal Bob-omb','Baby Bowser','Exor','Junior Shrooboid','Hammer Bros','Swiggler','Sunnycide','Shrooboid Brat','Mrs. Thwomp','Commander Shroob','Support Shroobs','Elder Shrooboid','Shrowser','Baby Mario','Baby Luigi','Dream Luigi','4-Bros. Random Block','Adult Shine Block','Broggy',
+'Nebula' ,'Drax','Hugo de Jonge','thierry baudet','Jesse Klaver','Djoopie','MisterPringleMan','Agent Carter','Misterio','Captain Marvel','Odin','Stan Lee','Fitz', 'Hawk Eye','Skye','Black Panther','Jemma Simmons', 'Mario', 'Quick silver','Wolverine', 'Deadpool','Flash','SuperMan','Batman','Mantis']
 colorblindNames = ['thomas', 'george', 'colorblind guy','thierry baudet']
 cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames)
 #creating players
@@ -1145,7 +1156,7 @@ for i in range(setting[4]):
                 break
     else:
         playerList.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
-        playerListEndOfGame.append(player(1, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(1, playerList[len(playerList)-1].name, [], 0, [], len(playerList)+1))
         if playerList[len(playerList)-1].name.lower() in colorblindNames and setting[8] == True:
             randomNumber = random.randint(0,100)
             if randomNumber > 85:#the colorblind effect
@@ -1168,7 +1179,7 @@ for i in range(setting[4]):
 for i in range(setting[5]):
     if setting[1] != "Exercise":
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
-        playerListEndOfGame.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(0, playerList[len(playerList)-1].name, [], 0, [], len(playerList)+1))
         if playerList[len(playerList)-1].name.lower() in colorblindNames.lower() and setting[8] == True:
             randomNumber = random.randint(0,100)#the colorblind effect
             if randomNumber > 85:
@@ -1179,7 +1190,7 @@ for i in range(setting[5]):
                 playerList[len(playerList)-1].effect = 1
     else:
         playerList.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
-        playerListEndOfGame.append(player(0, computerNameList[random.randint(0, len(computerNameList)-1)], [], 0, [], len(playerList)))
+        playerListEndOfGame.append(player(0, playerList[len(playerList)-1].name, [], 0, [], len(playerList)+1))
 
     if random.randint(0,100) > 8 and setting[8] == True:#the colorblind effect
         randomNumber = random.randint(0,100)
