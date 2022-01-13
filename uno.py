@@ -388,10 +388,10 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     historyOfCards.append("nothing, he grabbed a card")
                     playerListEndOfGame[player.number].grabbedCard += 1
                 elif numberCard == -1:
-                    print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates")
+                    print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates\n-8 make user into a bot\n-9 change bot into user")
                 elif numberCard == -2:
                     for x in range(len(playerList)):
-                        print(f"player {x+1}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
+                        print(f"player {playerList[x].number}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
                 elif numberCard == -3:
                     for x in range(len(historyOfCards)):
                         if historyOfCards[x] != "nothing, he grabbed a card" and historyOfCards[x] != "nothing, he disconnected":
@@ -400,9 +400,9 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                             print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
                 elif numberCard == -4:
                     if turn != 1:
-                        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
+                        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
                     else:
-                        print(f"The starting card is {lastPlayedCardName}")
+                        print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
                     cardsInDeckString = ""
                     for x in range(len(player.cards)):#show all your cards
                         cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
@@ -412,19 +412,21 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                 elif numberCard == -6:
                     playerList.pop(player.number)
                     playingDirection = playingDirection * len(playerList)
-                    print(f"u deleted {player.number + 1}, {player.name} from the game")
+                    print(f"u deleted {player.number+ 1}, {player.name} from the game")
                     historyOfCards.append("nothing, he disconnected")
                     loop = False
                 elif numberCard == -7:
-                    player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra = saveStates(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra)
+                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
                     print("don't forget that u need to do -4 again to show ur options")
                 elif numberCard == -8:
-                    for xyz in range(len(player.cards)):
-                        player.cards.pop(0)
+                    player.type = 0
                 elif numberCard == -9:
-                    player.effect = 0
+                    id = input('what player id?')
+                    for x in range(len(playerList)):
+                        if playerList[x].number == id-1:
+                            playerList[x].type = 1
                 elif numberCard == -10:
-                    print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings")
+                    print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console")
                 elif numberCard == -11:
                     randomNumber = random.randint(0,100)
                     if randomNumber > 85:#the colorblind effect
@@ -443,6 +445,13 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     lookAtCards(playerList)
                 elif numberCard == -15:
                     print(settings)
+                elif numberCard == -16:
+                    for xyz in range(len(player.cards)):
+                        player.cards.pop(0)
+                elif numberCard == -17:
+                    player.effect = 0
+                elif numberCard == -18:
+                    clear_console()
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -743,6 +752,7 @@ def aiTurn(player, cards, lastPlayedCards, playerList, settings, playingDirectio
     #if turn == 334: #for if problems arise
     #   print("placeholder") #for if problems arise
     uno = checkAmountOfCards(playerList)
+
     player.cards.append(-1)
     valueList = list()
     amountOfColor = list()
@@ -979,10 +989,10 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             playerListEndOfGame[player.number].bullied += 1
                             historyOfCards.append("nothing, he grabbed a card")
                         elif numberCard == -1:
-                            print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates")
+                            print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates\n-8 make user into a bot\n-9 change bot into user")
                         elif numberCard == -2:
                             for x in range(len(playerList)):
-                                print(f"player {x+1}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
+                                print(f"player {playerList[x].number}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
                         elif numberCard == -3:
                             for x in range(len(historyOfCards)):
                                 if historyOfCards[x] != "nothing, he grabbed a card" and historyOfCards[x] != "nothing, he disconnected":
@@ -1010,12 +1020,14 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
                             print("don't forget that u need to do -4 again to show ur options")
                         elif numberCard == -8:
-                            for xyz in range(len(player.cards)):
-                                player.cards.pop(0)
+                            player.type = 0
                         elif numberCard == -9:
-                            player.effect = 0
+                            id = input('what player id?')
+                            for x in range(len(playerList)):
+                                if playerList[x].number == id-1:
+                                    playerList[x].type = 1
                         elif numberCard == -10:
-                            print("admin Tools:\n-8 to delete cards\n-9 to remove colorblindness\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings")
+                            print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console")
                         elif numberCard == -11:
                             randomNumber = random.randint(0,100)
                             if randomNumber > 85:#the colorblind effect
@@ -1034,6 +1046,13 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             lookAtCards(playerList)
                         elif numberCard == -15:
                             print(settings)
+                        elif numberCard == -16:
+                            for xyz in range(len(player.cards)):
+                                player.cards.pop(0)
+                        elif numberCard == -17:
+                            player.effect = 0
+                        elif numberCard == -18:
+                            clear_console()
                         else:
                             numberCard -= 1
                             if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
@@ -1134,7 +1153,7 @@ computerNameList = ['thomas', 'thom', 'muik', 'coen', 'staninna', 'stijn', 'flor
 'Blue Toad','Spin Drift','Motos','Piantas','Shadow Luigi','Pink-gold peach','Invincible Mario','Mini Mario','Mega Mario','Shell Mario','Cat Mario','Cosmic Mario','Fire Mario','Propeller Mario','Ice Mario','Gold Mario','Pinguin mario','Tanuki Mario','Toadsworth','Fludd','Petey Piranha','Shadow Mario','Klepto','Wriggler','Whomp King','Whomp','Money Bag','EyeRock','Amp',
 'Shrooblet','Boom Guy','Koopeleon','Boo Guy','Elasto-Piranha','Spiny Shroopa','Lakitufo','Dr. Shroob','Pidgit','Coconutter','Galoomba','Gnarantula','RC Shroober','Shrooba Diver','Dark Boo','Snifaro','Elite Boom Guy','Thwack','Tanoomba','Red Coconutter','Gold Koopeleon','	Blazing Shroob',
 'Aurora Block','Popple','Blue switch','Dr Snoozemore','Control Block','Empty Block','L Block','Laser Block','M Block','Pi\'illoper','Recovery Block','Save Album','Simu-Block','Small Shine Block',
-'Ice Flower','Cannonball','Wiggly','Bros. Flower','Green Shell','Dreambunny','Mushroom','Super Mushroom','Mega Phil','Ultra Mushroom','Max Mushroom','Mega Lowe','Mole Hunt Host','Mushroom Drop','Super Drop',
+'Ice Flower','Cannonball','Wiggly','Bros. Flower','Green Shell','Dreambunny','Mushroom','Super Mushroom','Mega Phil','Ultra Mushroom','Max Mushroom','Mole Hunt Host','Mushroom Drop','Super Drop',
 'Ultra Drop','Private Goomp','1-up Mushroom','1-up Super','Corporal Paraplonk','Refreshing Herb','Green Pepper','Red Pepper','Antasma','Lil\' Massif','Bedsmith','Big Massif','Luiginoid','Blue Pepper','Dream stone\'s spirit',
 'Price Dreambert','Time hole','Brickle','Trampoline','Treasure chest','Warp block','Eldream','Warp Pipe','Yellow switch','Hooski','Zeekeeper','Bros. Ball.','Starlow','Cush','Brock','Britta','Nommon','Mix Flower','Red Shell','Copy Flower','Seabury','Seabelle','Pocket Chomp','Smash Egg','Seadring','Shelltop',
 'Thwack Totem','Guardian Shroob','Shroid','Love Bubble','Skellokey','Handfake','Fly Guy','Piranha Planet','Wonder Thwack','Tashrooba','Snoozorb','','Soul Bubble','Shroob Rex','Shroobsworth','Intern Shroob','Ghoul Guy','Lethal Bob-omb','Baby Bowser','Exor','Junior Shrooboid','Hammer Bros','Swiggler','Sunnycide','Shrooboid Brat','Mrs. Thwomp','Commander Shroob','Support Shroobs','Elder Shrooboid','Shrowser','Baby Mario','Baby Luigi','Dream Luigi','4-Bros. Random Block','Adult Shine Block','Broggy',
