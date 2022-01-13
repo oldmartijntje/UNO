@@ -199,7 +199,7 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
             try:
                 playerListEndOfGame[player.number].cardsFromPile += 1    
                 if len(cardPile) > 1:
-                    if cardPile.split('.')[1] == '0' and int(cardPile.split('.')[0]) == len(cardColors)-1:
+                    if cardPile[0].split('.')[1] == '0' and int(cardPile[0].split('.')[0]) == len(cardColors)-1:
                         cardPile[0] = f'{len(cardColors)-1}.0'
                     gift.append(cardPile[0])
                     if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
@@ -224,7 +224,7 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
                         for x in range(len(placeholderList)):
                             cardPile.append(placeholderList[x])
                         if type(cardPile[0]) == list: cardPile = cardPile[0]
-                        if cardPile.split('.')[1] == '0' and int(cardPile.split('.')[0]) == len(cardColors)-1:
+                        if cardPile[0].split('.')[1] == '0' and int(cardPile[0].split('.')[0]) == len(cardColors)-1:
                             cardPile[0] = f'{len(cardColors)-1}.0'
                         gift.append(cardPile[0])
                         if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
@@ -367,8 +367,8 @@ def checkForPlus(card):
             test = True
         return test
 
-def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirection, activePlayer, win, playedPlusCards, turn, extra = []):
-    lastPlayedCardName = cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)
+def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playerdCard, turn, extra = []):
+    lastPlayedCardName = cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)
     if turn != 1:
         print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
     else:
@@ -383,9 +383,9 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
             numberCard = int(input())
             if numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
-                    if (lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] == "4" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "1") or (lastPlayedCard[len(lastPlayedCard)-1].split(".")[1] == "11" and lastPlayedCard[len(lastPlayedCard)-1].split(".")[0] != "4"):
+                    if (lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] == "4" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "1") or (lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "11" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] != "4"):
                         win.append("+")
-                    cardsForPlayer, cards, lastPlayedCard, playedPlusCards = (takeCardFromDeck(1, cards, lastPlayedCard, player, playedPlusCards))#grab a card
+                    cardsForPlayer, cards, lastPlayedCards, playerdCard = (takeCardFromDeck(1, cards, lastPlayedCards, player, playerdCard))#grab a card
                     for x in range(len(cardsForPlayer)):
                         player.cards.append(cardsForPlayer[x])
                     loop = False
@@ -404,9 +404,9 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                             print(f"{historyPlayersThatPlayedACard[x]} played {historyOfCards[x]}")
                 elif numberCard == -4:
                     if turn != 1:
-                        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {cardIdToName(lastPlayedCard, player.effect)}")
+                        print(f"The last player {historyPlayersThatPlayedACard[len(historyPlayersThatPlayedACard)-1]} played {lastPlayedCardName}")
                     else:
-                        print(f"The starting card is {cardIdToName(lastPlayedCard, player.effect)}")
+                        print(f"The starting card is {cardIdToName(lastPlayedCards, player.effect)}")
                     cardsInDeckString = ""
                     for x in range(len(player.cards)):#show all your cards
                         cardsInDeckString += "| " + f"{x+1}."+cardIdToName(player.cards[x], player.effect)+" | "
@@ -420,12 +420,13 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                     historyOfCards.append("nothing, he disconnected")
                     loop = False
                 elif numberCard == -7:
-                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra = saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
+                    player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playerdCard, turn, extra = saveStates(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playerdCard, turn, extra)
                     print("don't forget that u need to do -4 again to show ur options")
                 elif numberCard == -8:
                     player.type = 0
+                    print("okay, now u still gotta play a card tho")
                 elif numberCard == -9:
-                    id = input('what player id?')
+                    id = int(input('what player id?'))
                     for x in range(len(playerList)):
                         if playerList[x].number == id-1:
                             playerList[x].type = 1
@@ -459,22 +460,22 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
-                    splittedLastCard = lastPlayedCard[len(lastPlayedCard)-1].split(".")
+                    splittedLastCard = lastPlayedCards[len(lastPlayedCards)-1].split(".")
                     if int(splittedCard[0]) != len(cardColors)-1 and int(splittedLastCard[0]) != len(cardColors)-1: #check for wild or +4 card
                         if splittedCard[0] == splittedLastCard[0] or splittedCard[1] == splittedLastCard[1]:
-                            lastPlayedCard.append(player.cards[numberCard])
+                            lastPlayedCards.append(player.cards[numberCard])
                             player.cards.pop(numberCard)
-                            print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                            historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                            print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                            historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                             loop = False
                             if len(player.cards) == 0:#check if someone has won
                                 win[0] = True
                             if len(win) != 1:
                                 while len(win) != 1:
                                     win.pop(1)
-                            if len(lastPlayedCard) > 1:
-                                playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                lastPlayedCard.pop(len(lastPlayedCard)-2)
+                            if len(lastPlayedCards) > 1:
+                                playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                lastPlayedCards.pop(len(lastPlayedCards)-2)
                         else:#it is not a available card
                             print("you can't play that card right now")
                     else:# play the wild or +4 card
@@ -487,13 +488,13 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                                 try:
                                     chosenColor = int(input(f"what color do you choose?\n{wildCardColorLoop}\n"))#choose the color of the wild card
                                     if chosenColor-5 < len(cardColors)-1 and chosenColor-1 >= 0:
-                                        lastPlayedCard.append(f"{len(cardColors)-1}.0.{chosenColor-1}")
+                                        lastPlayedCards.append(f"{len(cardColors)-1}.0.{chosenColor-1}")
                                         player.cards.pop(numberCard)
-                                        if len(lastPlayedCard) > 1:
-                                            playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                            lastPlayedCard.pop(len(lastPlayedCard)-2)
-                                        print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                                        historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                                        if len(lastPlayedCards) > 1:
+                                            playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                            lastPlayedCards.pop(len(lastPlayedCards)-2)
+                                        print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                                        historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                                         loop1 = False
                                         loop = False
                                         if chosenColor == -1:
@@ -520,49 +521,49 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                             #someone has drawn a wild card, which cards can u play now
                             if len(splittedLastCard) == 3:
                                 if splittedCard[0] == splittedLastCard[2]:
-                                    lastPlayedCard.append(player.cards[numberCard])
+                                    lastPlayedCards.append(player.cards[numberCard])
                                     player.cards.pop(numberCard)
-                                    if len(lastPlayedCard) > 1:
-                                        playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                        lastPlayedCard.pop(len(lastPlayedCard)-2)
-                                    print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                                    historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                                    if len(lastPlayedCards) > 1:
+                                        playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                        lastPlayedCards.pop(len(lastPlayedCards)-2)
+                                    print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                                    historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                                     loop = False
                                     if len(player.cards) == 0:#check if someone has won
                                         win[0] = True
                                 elif int(splittedCard[0]) == len(cardColors)-1:
                                     #if you want to play a +4 card
-                                    lastPlayedCard.append(player.cards[numberCard])
+                                    lastPlayedCards.append(player.cards[numberCard])
                                     player.cards.pop(numberCard)
-                                    if len(lastPlayedCard) > 1:
-                                        playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                        lastPlayedCard.pop(len(lastPlayedCard)-2)
-                                    print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                                    historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                                    if len(lastPlayedCards) > 1:
+                                        playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                        lastPlayedCards.pop(len(lastPlayedCards)-2)
+                                    print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                                    historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                                     loop = False
                                     if len(player.cards) == 0:#check if someone has won
                                         win[0] = True
                                 else:#it is not a available card
                                     print("you can't play that card right now")
                             else:
-                                lastPlayedCard.append(player.cards[numberCard])
+                                lastPlayedCards.append(player.cards[numberCard])
                                 player.cards.pop(numberCard)
-                                if len(lastPlayedCard) > 1:
-                                    playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                    lastPlayedCard.pop(len(lastPlayedCard)-2)
-                                print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                                historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                                if len(lastPlayedCards) > 1:
+                                    playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                    lastPlayedCards.pop(len(lastPlayedCards)-2)
+                                print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                                historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                                 loop = False
                                 if len(player.cards) == 0:#check if someone has won
                                     win[0] = True
                         else:
-                            lastPlayedCard.append(player.cards[numberCard])
+                            lastPlayedCards.append(player.cards[numberCard])
                             player.cards.pop(numberCard)
-                            if len(lastPlayedCard) > 1:
-                                playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-                                lastPlayedCard.pop(len(lastPlayedCard)-2)
-                            print(f"you played {cardIdToName(lastPlayedCard[len(lastPlayedCard)-1], player.effect)}")
-                            historyOfCards.append(lastPlayedCard[len(lastPlayedCard)-1])
+                            if len(lastPlayedCards) > 1:
+                                playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+                                lastPlayedCards.pop(len(lastPlayedCards)-2)
+                            print(f"you played {cardIdToName(lastPlayedCards[len(lastPlayedCards)-1], player.effect)}")
+                            historyOfCards.append(lastPlayedCards[len(lastPlayedCards)-1])
                             loop = False
                             if len(player.cards) == 0:#check if someone has won
                                 win[0] = True                        
@@ -571,11 +572,11 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
         except Exception as e:
             print(e)
             print("try inputting a number")
-    if checkForPlus(lastPlayedCard[len(lastPlayedCard)-1]) == True:
-        for x in range(len(lastPlayedCard)-1):
-            playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
-            lastPlayedCard.pop(len(lastPlayedCard)-2)
-    return player, lastPlayedCard, playingDirection, win, playedPlusCards, turn, extra, playerList
+    if checkForPlus(lastPlayedCards[len(lastPlayedCards)-1]) == True:
+        for x in range(len(lastPlayedCards)-1):
+            playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
+            lastPlayedCards.pop(len(lastPlayedCards)-2)
+    return player, lastPlayedCards, playingDirection, win, playerdCard, turn, extra, playerList
 
 def setupCardPile(color, types, special, settings): #shuffles and creates card deck
     cardPile = list()
@@ -1025,8 +1026,9 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             print("don't forget that u need to do -4 again to show ur options")
                         elif numberCard == -8:
                             player.type = 0
+                            print("okay, now u still gotta play a card tho")
                         elif numberCard == -9:
-                            id = input('what player id?')
+                            id = int(input('what player id?'))
                             for x in range(len(playerList)):
                                 if playerList[x].number == id-1:
                                     playerList[x].type = 1
