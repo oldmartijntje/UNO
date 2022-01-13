@@ -199,6 +199,8 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
             try:
                 playerListEndOfGame[player.number].cardsFromPile += 1    
                 if len(cardPile) > 1:
+                    if cardPile.split('.')[1] == '0' and int(cardPile.split('.')[0]) == len(cardColors)-1:
+                        cardPile[0] = f'{len(cardColors)-1}.0'
                     gift.append(cardPile[0])
                     if mode == 0 :print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
                     cardPile.pop(0)
@@ -207,10 +209,10 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
                     placeholderList = list()
                     print("shuffling cards...")
                     if len(lastPlayedCard) > 1:
-                        for y in range(1, len(lastPlayedCard)):
+                        for _ in range(1, len(lastPlayedCard)):
                             placeholderList.append(lastPlayedCard[1])
                             lastPlayedCard.pop(1)
-                    for z in range(0, len(playedCards)):
+                    for _ in range(0, len(playedCards)):
                         placeholderList.append(playedCards[0])
                         playedCards.pop(0)
                     if len(placeholderList) == 0:
@@ -222,6 +224,8 @@ def takeCardFromDeck(amount, cardPile, lastPlayedCard, player, playedCards, mode
                         for x in range(len(placeholderList)):
                             cardPile.append(placeholderList[x])
                         if type(cardPile[0]) == list: cardPile = cardPile[0]
+                        if cardPile.split('.')[1] == '0' and int(cardPile.split('.')[0]) == len(cardColors)-1:
+                            cardPile[0] = f'{len(cardColors)-1}.0'
                         gift.append(cardPile[0])
                         if mode == 0 : print(f"you have grabbed a {cardIdToName(cardPile[0], player.effect)}")
                         cardPile.pop(0)
@@ -483,7 +487,7 @@ def chooseCard(player, cards, lastPlayedCard, playerList, settings, playingDirec
                                 try:
                                     chosenColor = int(input(f"what color do you choose?\n{wildCardColorLoop}\n"))#choose the color of the wild card
                                     if chosenColor-5 < len(cardColors)-1 and chosenColor-1 >= 0:
-                                        lastPlayedCard.append(f"{player.cards[numberCard]}.{chosenColor-1}")
+                                        lastPlayedCard.append(f"{len(cardColors)-1}.0.{chosenColor-1}")
                                         player.cards.pop(numberCard)
                                         if len(lastPlayedCard) > 1:
                                             playedPlusCards.append(lastPlayedCard[len(lastPlayedCard)-2])
