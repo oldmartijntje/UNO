@@ -431,7 +431,7 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                         if playerList[x].number == id-1:
                             playerList[x].type = 1
                 elif numberCard == -10:
-                    print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console")
+                    print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console\n-19 exit")
                 elif numberCard == -11:
                     randomNumber = random.randint(0,100)
                     if randomNumber > 85:#the colorblind effect
@@ -457,6 +457,8 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                     player.effect = 0
                 elif numberCard == -18:
                     clear_console()
+                elif numberCard == -19:
+                    exit()
                 else: #play the card
                     numberCard -= 1
                     splittedCard = player.cards[numberCard].split(".")
@@ -1033,7 +1035,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 if playerList[x].number == id-1:
                                     playerList[x].type = 1
                         elif numberCard == -10:
-                            print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console")
+                            print("admin Tools:\n-10 this menu\n-11 add random colorblindness\n-12 instant win\n-13 add any card to your deck\n-14 to see which cards everyone has\n-15 print settings\n-16 to delete cards\n-17 to remove colorblindness\n-18 clear console\n-19 exit")
                         elif numberCard == -11:
                             randomNumber = random.randint(0,100)
                             if randomNumber > 85:#the colorblind effect
@@ -1059,6 +1061,8 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             player.effect = 0
                         elif numberCard == -18:
                             clear_console()
+                        elif numberCard == -19:
+                            exit()
                         else:
                             numberCard -= 1
                             if int(player.cards[numberCard].split(".")[0]) == len(cardColors)-1 and player.cards[numberCard].split(".")[1] == '1':#check if it is a +4 card
@@ -1163,7 +1167,11 @@ computerNameList = ['thomas', 'thom', 'muik', 'coen', 'staninna', 'stijn', 'flor
 'Ultra Drop','Private Goomp','1-up Mushroom','1-up Super','Corporal Paraplonk','Refreshing Herb','Green Pepper','Red Pepper','Antasma','Lil\' Massif','Bedsmith','Big Massif','Luiginoid','Blue Pepper','Dream stone\'s spirit',
 'Price Dreambert','Time hole','Brickle','Trampoline','Treasure chest','Warp block','Eldream','Warp Pipe','Yellow switch','Hooski','Zeekeeper','Bros. Ball.','Starlow','Cush','Brock','Britta','Nommon','Mix Flower','Red Shell','Copy Flower','Seabury','Seabelle','Pocket Chomp','Smash Egg','Seadring','Shelltop',
 'Thwack Totem','Guardian Shroob','Shroid','Love Bubble','Skellokey','Handfake','Fly Guy','Piranha Planet','Wonder Thwack','Tashrooba','Snoozorb','','Soul Bubble','Shroob Rex','Shroobsworth','Intern Shroob','Ghoul Guy','Lethal Bob-omb','Baby Bowser','Exor','Junior Shrooboid','Hammer Bros','Swiggler','Sunnycide','Shrooboid Brat','Mrs. Thwomp','Commander Shroob','Support Shroobs','Elder Shrooboid','Shrowser','Baby Mario','Baby Luigi','Dream Luigi','4-Bros. Random Block','Adult Shine Block','Broggy',
-'Nebula' ,'Drax','Hugo de Jonge','thierry baudet','Jesse Klaver','Djoopie','MisterPringleMan','Agent Carter','Misterio','Captain Marvel','Odin','Stan Lee','Fitz', 'Hawk Eye','Skye','Black Panther','Jemma Simmons', 'Mario', 'Quick silver','Wolverine', 'Deadpool','Flash','SuperMan','Batman','Mantis']
+'Nebula' ,'Drax','Hugo de Jonge','thierry baudet','Jesse Klaver','Djoopie','MisterPringleMan','Agent Carter','Misterio','Captain Marvel','Odin','Stan Lee','Fitz', 'Hawk Eye','Skye','Black Panther','Jemma Simmons', 'Mario', 'Quick silver','Wolverine', 'Deadpool','Flash','SuperMan','Batman','Mantis',
+'mandy','madelief','anne nieuwenhuis','stan','nathalie','djurre','rick','annieltje','sanne','elize','elise','luna','lianne','julia','ingrid','tiff','sven','lennert','johnny','kimberly','daniel','jamy','lynn','mitch','roos','lotte','matthew','emilia','mia','anna','lisanne','renske','ferris',
+'vivienne','frankaaaa','elvirus','nathan','simon','bo','jasmine','mart','gilli djojo','king papi','iris','melis','jelte','boris johnson','naomi','merlijn','tineke','mr.muffinnn','timo','niels','duncan','morris','donnie','manouk','jelle','corne','elke','mariska','melissa','luca','maddo','luuk',
+'randerkip','marten','tim','sam','samuel','eva','fernndo','kirsten','david','yarilin','fatma','matthijs','tino','coen','annefleurr','noa','adrienne','niels','kim','jasper','stevey','guusje','lone','xander','jordy','jochem','julia','sem','toine','mark','laurens','barbara','floor','ruben','aqua',
+'finn','frank','poerd','luna','ezraki','esther','alicia','andres','fenne','babette','dante','jonne','leon','kevin','rio','langefries','danique','virtualpeko','yassin','liz','sweetie','sb','raoul','thijs','arianne','henk','henk de steen','henkie spenkie','yeetus']
 colorblindNames = ['thomas', 'george', 'colorblind guy','thierry baudet']
 cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames = pluginLoad(cardTypes, cardTypesNames, cardColors, yellowGreenColorblindCardColorsNames, blueRedColorblindCardColorsNames, colorblindCardColorsNames, cardColorsNames, specials, specialsNames)
 #creating players
@@ -1359,3 +1367,5 @@ except Exception as e:
     print(f"seed: {setting[0]}")
     input(e)
 
+print()
+kaas = input()
