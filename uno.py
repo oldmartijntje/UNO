@@ -380,7 +380,8 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
     loop = True
     while loop == True:
         try:
-            numberCard = int(input())
+            numberCard = input()
+            numberCard = int(numberCard)
             if numberCard <= len(player.cards):#if he chose an existing card
                 if numberCard == 0:
                     if (lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] == "4" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "1") or (lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "11" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] != "4"):
@@ -395,7 +396,7 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                     print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates\n-8 make user into a bot\n-9 change bot into user")
                 elif numberCard == -2:
                     for x in range(len(playerList)):
-                        print(f"player {playerList[x].number}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
+                        print(f"player {playerList[x].number+1}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
                 elif numberCard == -3:
                     for x in range(len(historyOfCards)):
                         if historyOfCards[x] != "nothing, he grabbed a card" and historyOfCards[x] != "nothing, he disconnected":
@@ -488,7 +489,8 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
                             while loop1 == True:
                                 try:
-                                    chosenColor = int(input(f"what color do you choose?\n{wildCardColorLoop}\n"))#choose the color of the wild card
+                                    chosenColor = input(f"what color do you choose?\n{wildCardColorLoop}\n")#choose the color of the wild card
+                                    chosenColor = int(chosenColor)
                                     if chosenColor-5 < len(cardColors)-1 and chosenColor-1 >= 0:
                                         lastPlayedCards.append(f"{len(cardColors)-1}.0.{chosenColor-1}")
                                         player.cards.pop(numberCard)
@@ -503,7 +505,7 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                                             print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options")
                                         elif chosenColor == -2:
                                             for x in range(len(playerList)):
-                                                print(f"player {x}, {playerList[x].name} has {len(playerList[x].cards)} cards")
+                                                print(f"player {x}, {playerList[x].name+1} has {len(playerList[x].cards)} cards")
                                         elif chosenColor == -3:
                                             for x in range(len(historyOfCards)):
                                                 if historyOfCards[x] != "nothing, he grabbed a card":
@@ -516,9 +518,13 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
                                                 wildCardColorLoop += f"| {x+1}.{cardColorsNames[x]} | "
                                     else:
                                         print("that is not an option")
+                                        
                                 except Exception as e:
-                                    print(e)
-                                    print("please choose a number")
+                                    try:
+                                        exec(chosenColor)
+                                    except:
+                                        print(e)
+                                        print("please choose a number")
                         elif splittedLastCard[1] == '0' and int(splittedLastCard[0]) == len(cardColors)-1:
                             #someone has drawn a wild card, which cards can u play now
                             if len(splittedLastCard) == 3:
@@ -572,8 +578,11 @@ def chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDire
             else:
                 print("you don't have a card in that slot")
         except Exception as e:
-            print(e)
-            print("try inputting a number")
+            try:
+                exec(numberCard)
+            except:
+                print(e)
+                print("try inputting a number")
     if checkForPlus(lastPlayedCards[len(lastPlayedCards)-1]) == True:
         for x in range(len(lastPlayedCards)-1):
             playerdCard.append(lastPlayedCards[len(lastPlayedCards)-2])
@@ -983,7 +992,8 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
             loop = True
             while loop == True:
                 try:
-                    numberCard = int(input())
+                    numberCard = input()
+                    numberCard = int(numberCard)
                     if numberCard <= len(player.cards):#check if it's a card you have
                         if numberCard == 0:
                             if (lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] == "4" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "1") or (lastPlayedCards[len(lastPlayedCards)-1].split(".")[1] == "11" and lastPlayedCards[len(lastPlayedCards)-1].split(".")[0] != "4"):
@@ -999,7 +1009,7 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                             print("settings:\n-2 to see how many cards everyone has\n-3 to see the history\n-4 to show your options\n-5 to show the seed\n-6 to disconnect this user\n-7 savestates\n-8 make user into a bot\n-9 change bot into user")
                         elif numberCard == -2:
                             for x in range(len(playerList)):
-                                print(f"player {playerList[x].number}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
+                                print(f"player {playerList[x].number+1}, {playerList[x].name} has {len(playerList[x].cards)} cards")#show amount of cards everyone has
                         elif numberCard == -3:
                             for x in range(len(historyOfCards)):
                                 if historyOfCards[x] != "nothing, he grabbed a card" and historyOfCards[x] != "nothing, he disconnected":
@@ -1088,10 +1098,13 @@ def playerTurn(player, cards, lastPlayedCards, playerList, settings, playingDire
                                 player, lastPlayedCards, playingDirection, win, playedCards, turn, extra, playerList = chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
                                 loop = False
                     else:
-                        print("that is not a card you have")
+                        print("you don't have a card in that slot")
                 except Exception as e:
-                    print("try a number")
-                    print(e)
+                    try:
+                        exec(numberCard)
+                    except:
+                        print("try a number")
+                        print(e)
     else:
         player, lastPlayedCards, playingDirection, win, playedCards, turn, extra, playerList= chooseCard(player, cards, lastPlayedCards, playerList, settings, playingDirection, activePlayer, win, playedCards, turn, extra)
     if settings[4] > 1: input(f"that was your turn {player.name}\npress enter so the next player can play\n")
