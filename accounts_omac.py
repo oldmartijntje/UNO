@@ -1,8 +1,10 @@
-version = '2.0.0'
+version = '2.2.0'
 #code made by OldMartijntje
 
-def configFileConsole():
-    '''creates or reads config file (consoleApp)'''
+def configFileConsole(pathLocation = False):
+    '''creates or reads config file (consoleApp) 
+    the argument is the path to where accounts are stored.
+    if False or not given, the program will ask for you'''
     import configparser
     import string
     import os
@@ -14,7 +16,9 @@ def configFileConsole():
             config = configparser.ConfigParser(allow_no_value=True)
             config['DEFAULT'] = {'#don\'t change the file-extention if you are not sure of what it is' : None,
                 'fileExtention' : '_omac'}
-            folder = input('do you have a specific folder where you want to store account data?\nimport the path, or not\n>')
+            if pathLocation == False:
+                folder = input('do you have a specific folder where you want to store account data?\nimport the path, or not\n>')
+            else: folder = 'accounts/'
             if os.path.isdir(folder):#check if the inputted folder exists
                 if folder[len(folder)-1] != '/' and folder[len(folder)-1] != '\\':
                     folder += '\\'
@@ -47,7 +51,10 @@ def loadAccount(accountName = 'testaccount', configSettings = ['accounts/', 'Fal
     #just loading the json
     with open(f'{path}{accountName.lower()}{fileExtention}.json') as json_file:
         dataString = json.load(json_file)
-        data = json.loads(dataString)
+        if type(dataString) != dict:
+            data = json.loads(dataString)
+        else:
+            data= dataString
         data['loadTime'] = datetime.datetime.now()
     if data['versionHistory'][len(data['versionHistory']) -1] != version:
         data['versionHistory'].append(version)
@@ -161,14 +168,13 @@ def questionTkinter(question = 'account doesn\'t exist, should i create it?', ti
 
 def createAppData(data, appID):
     '''creates empty errays for you to use in the dicts'''
-    if appID not in data['appdata']:
-        data['appdata'][appID] = []
+    if appID not in data['appData']:
+        data['appData'][appID] = []
     if appID not in data['collectables']:
         data['collectables'][appID] = []
     if appID not in data['achievements']:
         data['achievements'][appID] = []
     return data
-
 
 class defaultConfigurations:
     def defaultLoadingConsole(configSettings = ['accounts/', 'False', 'testaccount', '_omac']):
@@ -193,4 +199,12 @@ class defaultConfigurations:
             else:
                 return False
 
-
+class easy:
+    def createPathIfNotThere(path):
+        '''Creates the path if it doesn't exists and returns true or false'''
+        import os
+        if os.path.isdir(path):
+            return True
+        else:   
+            os.mkdir(path)
+            return False
