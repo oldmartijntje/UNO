@@ -1,4 +1,4 @@
-version = '2.2.0'
+version = '2.3.0'
 #code made by OldMartijntje
 
 def configFileConsole(pathLocation = False):
@@ -101,12 +101,16 @@ def checkForAccount(accountName = 'testaccount', configSettings = ['accounts/', 
     else:
         return False
 
-def removeCharacters(name):
-    '''this only keeps numbers and letters in the string you provde'''
+def removeCharacters(name, removeCharacters = []):
+    '''this only keeps numbers and letters in the string you provide, unless you give a list of characters, then it removes those characters instead'''
     import string
     name = name.replace(" ", "")
-    for character in string.punctuation:
-        name = name.replace(character, '')
+    if removeCharacters == []:
+        for character in string.punctuation:
+            name = name.replace(character, '')
+    else:
+        for character in removeCharacters:
+            name = name.replace(str(character), '')
     return name
 
 def askAccountNameConsole(configSettings = ['accounts/', 'False', 'testaccount', '_omac'], text = 'please give username\n>'):
@@ -208,3 +212,32 @@ class easy:
         else:   
             os.mkdir(path)
             return False
+    
+    def addRandomNoDuplicates(list_all_items, amount_to_return : int = 1, beginList = [], ignoreExisting = True, avoidError = True):
+        '''first list is a list of all items, second argument is the amount of items, third argument is the list the items get added to. 
+        fourth argument ignores already existing items if True, if False, it will remove duplicates, last argument will avoid errors if nothing is left'''
+        import random
+        if ignoreExisting == False:
+            num = 0
+            while num < len(beginList):
+                counter = beginList.count(beginList[num])
+                if counter > 1:
+                    beginList.pop(num)
+                else:
+                    num += 1
+        num = 0
+        while num < len(list_all_items):
+            counter = list_all_items.count(list_all_items[num])
+            if list_all_items[num] in beginList:
+                list_all_items.pop(num)
+            elif counter > 1:
+                list_all_items.pop(num)
+            else:
+                num += 1
+        for x in range(amount_to_return):
+            if len(list_all_items) == 0 and avoidError == True:
+                return beginList
+            randomNumber = random.randint(0, len(list_all_items)-1)
+            beginList.append(list_all_items[randomNumber])
+            list_all_items.pop(randomNumber)
+        return beginList
