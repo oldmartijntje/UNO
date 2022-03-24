@@ -4,12 +4,14 @@ import accounts_omac
 import tkinter
 from tkinter import ttk
 import random
+from tkinter.messagebox import showwarning
 
 appIDorName = 'UNO2byMarjinIDK'
 
 bots = 4
 players = 2
 cardsPerPlayer = 7
+chosenWildColor = 'Red'
 
 playerDict = {}
 playerList = []
@@ -23,12 +25,15 @@ gameData = {'playerDict': playerDict,
             'playedCardsDeck': [],
             'playerHistory': [],
             'cardInfo' : {},
-            'wildInfo': {'played': False, 'chosenColor': 'blue'},
-            'colors': [],
+            'wildInfo': {'played': False, 'chosenColor': 'blue', 'colors': []},
             'statistics': {'winOrder':[]}}
 
 #without it there wouldn't be a folder to put the jsons in
 accounts_omac.easy.createPathIfNotThere('gameData/')
+
+
+######################## Read if JSON Exists ########################
+
 
 #without this it can't load a json nor create a new json with the cards
 if os.path.isfile(f"gameData/cardsDict.json"):
@@ -41,7 +46,7 @@ if os.path.isfile(f"gameData/cardsDict.json"):
             data_cardsDictList = json.loads(dataString_cardsDict)
         data_cardsDict = data_cardsDictList[0]   
         data_cardsList = data_cardsDictList[1]
-        colors = data_cardsDictList[2]
+        colorsInJson = data_cardsDictList[2]
 else:
     if os.path.isfile(f"gameData/cardsCreation.json"):
         with open(f"gameData/cardsCreation.json") as json_file_cardsCreation:
@@ -52,6 +57,8 @@ else:
             else:
                 data_cardsCreation = json.loads(dataString_cardsCreation)
         
+        ######################## Basic JSON Creation ########################
+
     else:
         data_cardsCreation = {'colors': ['Red', 'Yellow', 'Green', 'Blue'],
                             'displayColorsBG' : ['red', 'yellow', 'green', 'blue'],
@@ -66,9 +73,13 @@ else:
         with open(f"gameData/cardsCreation.json", 'w') as outfile:
             json.dump(json_string_cardsCreation, outfile)
 
+    
+######################## creation of the second json file ########################
+
     def changeCards(name):
-        nameLowered = name.lower()
+        '''automatically creates card data based on the name, like \'skip\' will automatically be detected a s a skip card'''
         global data_cardsDict
+        nameLowered = name.lower()
         if 'reverse' in nameLowered:
                 data_cardsDict[name]['reverse'] = True
         if 'skip' in nameLowered:
@@ -96,9 +107,10 @@ else:
             else:
                 data_cardsDict[name]['exchangeDecks'] = 1
 
-    
+
     data_cardsList = []
     data_cardsDict = {}
+    #creates the dict with card data, for every color the same set
     for x in range(len(data_cardsCreation['colors'])):
         for y in range(len(data_cardsCreation['cardsPerColor'])):
             data_cardsDict[f'{data_cardsCreation["colors"][x]} {data_cardsCreation["cardsPerColor"][y]}'] = {'color': f'{data_cardsCreation["colors"][x]}',
@@ -116,8 +128,10 @@ else:
                                                                                                             'displayFGColor': f'{data_cardsCreation["displayColorsFG"][x]}'}
                                                                                              
             changeCards(f'{data_cardsCreation["colors"][x]} {data_cardsCreation["cardsPerColor"][y]}')
+            #adds card to the list, so we know how many of each kind we have per game
             data_cardsList.append(f'{data_cardsCreation["colors"][x]} {data_cardsCreation["cardsPerColor"][y]}')
 
+    #creates dict with card data for cards without colors
     for i in range(len(data_cardsCreation['special'])):
         data_cardsDict[f'{data_cardsCreation["special"][i]}'] = {'color': f'{data_cardsCreation["specialBG"]}',
                                                                 'type': f'{data_cardsCreation["special"][i]}',
@@ -134,13 +148,22 @@ else:
                                                                 'displayFGColor': f'{data_cardsCreation["specialFG"]}'}
 
         changeCards(f'{data_cardsCreation["special"][i]}')
+        #adds card to the list, so we know how many of each kind we have per game
         data_cardsList.append(f'{data_cardsCreation["special"][i]}')
-    colors = data_cardsCreation['colors']
-    data_cardsDictList = [data_cardsDict, data_cardsList, colors]    
+
+######################## almost done with creation ########################
+
+    #adds colors to a list, without this you won't know what colors there are when selecting a color with a wild card   
+    colorsInJson = data_cardsCreation['colors']
+    data_cardsDictList = [data_cardsDict, data_cardsList, colorsInJson]    
 
     json_string_cardsDictList = json.dumps(data_cardsDictList)
     with open(f"gameData/cardsDict.json", 'w') as outfile:
         json.dump(json_string_cardsDictList, outfile)
+
+
+
+######################## Player Select Menu ########################
 
 
 '''
@@ -160,7 +183,11 @@ playersAmountSelect_var.trace('w', changedSomething)
 playerSelectWindow.mainloop()
 '''
 
+
+######################## Game Setup ########################
+
 def createPlayer(botOrHuman, playerNumber, name = 'herman'):
+    '''Creates a player or bot, depending on the input'''
     global gameData
     gameData['playerDict'][f'player {playerNumber}'] = {'type': botOrHuman,
                                                 'name': name,
@@ -169,9 +196,13 @@ def createPlayer(botOrHuman, playerNumber, name = 'herman'):
                                                 'effect': {},
                                                 'playedCards': {},
                                                 'programSettings': {'typeOfSelect': 'default', 'showColor': True, 'defaultBGwidget': '#f0f0f0', 'defaultFGwidget': 'black','defaultBGwindow': '#f0f0f0'}}
+    
+    #without this, you wouldn't know which plaers would exist
     gameData['playerList'].append(f'player {playerNumber}')
 
+#so you don't have the same player number for a bot and human
 num = 0
+#create bots and humans
 for x in range(players):
     createPlayer('Human', num)
     num += 1
@@ -179,106 +210,234 @@ for x in range(bots):
     createPlayer('Bot', num)
     num += 1
 
+#adding it to the gamedata, so it can be used in game
 gameData['grabCardsDeck'] = list(data_cardsList)
-gameData['cardInfo'] = data_cardsDict
-gameData['colors'] = colors
+gameData['cardInfo'] = dict(data_cardsDict)
+gameData['wildInfo']['colors'] = colorsInJson
 
+#would you want to play with a unshuffled deck of cards, me neither.
 random.shuffle(gameData['grabCardsDeck'])
 
+#give players cards
 for i in range(len(gameData['playerList'])):
     for _ in range(cardsPerPlayer):
         gameData['playerDict'][gameData['playerList'][i]]['cards'].append(gameData['grabCardsDeck'][0])
         gameData['grabCardsDeck'].pop(0)
 
+#get the first card
 gameData['playedCardsDeck'].append(gameData['grabCardsDeck'][0])
 gameData['playerHistory'].append('NONE')
 gameData['grabCardsDeck'].pop(0)
 
+#print data for some reason
 print(gameData['playerDict'])
-
-
-
-
 print(gameData['playerDict'][gameData['playerList'][gameData['active']]])
 
 
-turnWindow = tkinter.Tk()
+######################## Turns of players / bots ########################
 
 
-defaultBG = gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultBGwidget']
-defaultFG = gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget']
-defaultBGwindow = gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultBGwindow']
-
-turnWindow.configure(bg=defaultBGwindow)
-
-nameList = list()
-for x in range(len(gameData['playerList'])):
-    nameList.append(f"{gameData['playerDict'][gameData['playerList'][x]]['number']}.{gameData['playerDict'][gameData['playerList'][x]]['name']}")
-
-nameLabel = tkinter.Label(turnWindow, text =f"Player: {gameData['playerDict'][gameData['playerList'][gameData['active']]]['number']}.{gameData['playerDict'][gameData['playerList'][gameData['active']]]['name']}",borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
-nameLabel.grid(column=0, row=0, ipadx=20, ipady=10, sticky="EW", columnspan= 2)
-
-tkinter.Label(turnWindow,text='PlayerOrder:',bg = defaultBGwindow, fg =defaultFG).grid(column=2, row=0, ipadx=20, ipady=10, sticky="EW")
-tkinter.Label(turnWindow,text='Last Played Card:', bg = defaultBGwindow, fg =defaultFG).grid(column=0, row=1, ipadx=20, ipady=10, sticky="EW")
-tkinter.Label(turnWindow, text='By:', bg =defaultBGwindow, fg=defaultFG).grid(column=2, row=1, ipadx=20, ipady=10, sticky="EW")
-tkinter.Label(turnWindow, bg = defaultBGwindow).grid(column=0, row=2, ipadx=20, ipady=10, sticky="EW",columnspan= 4)
+#to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0
+def noIndexError(number, maxNumber, minNumber = 0):
+    '''to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0'''
+    while number > maxNumber or number < minNumber:
+        if number > maxNumber:
+            number -= maxNumber+1
+        elif number < minNumber:
+            number += maxNumber + 1
+    return number
 
 
-lastPlayed = tkinter.Label(turnWindow, text = f"{gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]}",borderwidth=2, relief="groove")
-if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['showColor'] == True:
-    lastPlayed.configure(bg = gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayBGColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
-else:
-    lastPlayed.configure(bg = gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultBGwidget'], fg =gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget'])
-lastPlayed.grid(column=1, row=1, ipadx=20, ipady=10, sticky="EW")
+#play a card
+def playCard(card):
+    global gameData
+
+    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
+        turnWindow.destroy()
+    gameData['playerHistory'].append(gameData['playerList'][gameData['active']])
+    gameData['playedCardsDeck'].append(card)
+    gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)
+    if gameData['cardInfo'][card]['suckDragon']:
+        pass
+    if gameData['cardInfo'][card]['shuffleOrder']:
+        pass
+    if gameData['cardInfo'][card]['dualWielding']:
+        pass
+    if gameData['cardInfo'][card]['wild']:
+        pass
 
 
-playerPlayed = tkinter.Label(turnWindow,borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
-playerPlayed.grid(column=3, row=1, ipadx=20, ipady=10, sticky="EW")
-if gameData['playerHistory'][len(gameData['playerHistory'])-1] == "NONE":
-    playerPlayed.configure(text = 'Nobody, it\'s the first card')
-else:
-    playerPlayed.configure(text =f"{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['number']}.{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['name']}")
+#is it playable tho??
+def checkIfCardPlayable(selected,mode = True):
+    if selected != '':
+        if gameData['cardInfo'][selected]['alwaysPlayable'] == True:
+            if mode == False:
+                return True
+            else:
+                playCard(selected)
+        elif gameData['cardInfo'][selected]['type'] == gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['type']:
+            if mode == False:
+                return True
+            else:
+                playCard(selected)
+        elif gameData['cardInfo'][selected]['color'] == gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['color']:
+            if mode == False:
+                return True
+            else:
+                playCard(selected)
+        else:
+            if mode == False:
+                return False
+    else:
+        showwarning(title='Play',message ='Uno\nYou might want to pick a card')
+
+#show what the card does
+def generateCardTip(card):
+    text = f"Card color: {gameData['cardInfo'][card]['color']}\nCard type: {gameData['cardInfo'][card]['type']}\n"
+    if checkIfCardPlayable(card,False):
+        text += 'This card is playable at this moment'
+    else:
+        text += 'This card is not playable at this moment'
+    if gameData['cardInfo'][card]['suckDragon']:
+        text += f'\nThis card Takes takes everyones cards and gives them {cardsPerPlayer} new cards.\n(which basically restarts the game)'
+    if gameData['cardInfo'][card]['shuffleOrder']:
+        text += f'\nThis card shuffles the order of the turns randomly.'
+    if gameData['cardInfo'][card]['dualWielding']:
+        text += f'\nThis card allows you to immediately play another card.'
+    if gameData['cardInfo'][card]['wild']:
+        text += f'\nThis card allows you to choose the color of the card.'
+    if gameData['cardInfo'][card]['reverse']:
+        text += f'\nThis card reverses the order of the players'
+    text += f'\nThis card shuffles the order of the turns randomly.'
+    text += f'\nThis card allows you to immediately play another card'
 
 
-playerOrderCombobox = ttk.Combobox(turnWindow,state='readonly',values = nameList)
-playerOrderCombobox.grid(column=3, row=0, ipadx=20, ipady=10, sticky="EW")
-
-tkinter.Label(turnWindow,text = 'select card to play:', bg =defaultBGwindow, fg= defaultFG).grid(column=0, row=3, ipadx=20, ipady=10, sticky="EW")
-
-card_var = tkinter.StringVar()
-
-if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['typeOfSelect'] == 'default':
-    cardSelect = ttk.Combobox(turnWindow)
-else:
-    cardSelect = ttk.Spinbox(turnWindow)
-cardSelect.configure(state='readonly', textvariable=card_var, values =gameData['playerDict'][gameData['playerList'][x]]['cards'])
-cardSelect.grid(column=1, row=3, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
-
-dataCard= ttk.Combobox(turnWindow, state='readonly')
-dataCard.grid(column=3, row=3, ipadx=20, ipady=10, sticky="EW")
-def cardData(*args):
-    listOfThings = list(gameData['cardInfo'][card_var.get()].keys())
-    listOfData = list()
-    for x in range(len(listOfThings)):
-        listOfData.append(f"{listOfThings[x]}: {gameData['cardInfo'][card_var.get()][listOfThings[x]]}")
-    dataCard.configure(values =listOfData)
+    return text
 
 
-card_var.trace('w', cardData)
-def settings():
+
+
+######################## player turn ########################
+
+def playerTurn():
+    global turnWindow
+    global gameData
+    activePlayer = gameData['active']
+
+    #create window
+    turnWindow = tkinter.Tk()
+
+    #easy accessable items
+    defaultBG = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget']
+    defaultFG = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultFGwidget']
+    defaultBGwindow = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwindow']
+
+    #change the window
+    turnWindow.configure(bg=defaultBGwindow)
+
+    #the combobox with player order
+    nameAndCardList = list()
+    nameList = list()
+    for x in range(len(gameData['playerList'])):
+        if int(gameData['direction']) < 0 or gameData['direction'] == '-0':
+            nameList.append(f"{gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer -(1+x), len(gameData['playerList'])-1)]]['number']}.{gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer -(1+x), len(gameData['playerList'])-1)]]['name']}")
+            nameAndCardList.append(f"{nameList[x]} ({len(gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer -(1+x), len(gameData['playerList'])-1)]]['cards'])} cards) ")
+        else:
+            nameList.append(f"{gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer + x +1, len(gameData['playerList'])-1)]]['number']}.{gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer + x + 1, len(gameData['playerList'])-1)]]['name']}")
+            nameAndCardList.append(f"{nameList[x]} ({len(gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer + x +1, len(gameData['playerList'])-1)]]['cards'])} cards) ")
+
+
+
+    #labels
+    nameLabel = tkinter.Label(turnWindow, text =f"Current player: {gameData['playerDict'][gameData['playerList'][activePlayer]]['number']}.{gameData['playerDict'][gameData['playerList'][gameData['active']]]['name']}",borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
+    nameLabel.grid(column=0, row=0, ipadx=20, ipady=10, sticky="EW", columnspan= 2)
+    tkinter.Label(turnWindow,text='PlayerOrder:',bg = defaultBGwindow, fg =defaultFG).grid(column=2, row=0, ipadx=20, ipady=10, sticky="EW")
+    tkinter.Label(turnWindow,text='Last played card:', bg = defaultBGwindow, fg =defaultFG).grid(column=0, row=1, ipadx=20, ipady=10, sticky="EW")
+    tkinter.Label(turnWindow, text='By:', bg =defaultBGwindow, fg=defaultFG).grid(column=2, row=1, ipadx=20, ipady=10, sticky="EW")
+    tkinter.Label(turnWindow, bg = defaultBGwindow).grid(column=0, row=2, ipadx=20, ipady=10, sticky="EW",columnspan= 4)
+    tkinter.Label(turnWindow,text = 'Select card to play:', bg =defaultBGwindow, fg= defaultFG).grid(column=0, row=3, ipadx=20, ipady=10, sticky="EW")  
+
+    #what happends when you touch the label with the last played card
+    def enter(*args):
+        global infoWindow
+        try:
+            infoWindow = tkinter.Tk()
+            infoWindow.geometry(f'+{infoWindow.winfo_pointerx()-infoWindow.winfo_rootx()+2}+{infoWindow.winfo_pointery()-infoWindow.winfo_rooty()+2}')
+            infoLabel = ttk.Label(infoWindow)
+            infoLabel.configure(text=generateCardTip(gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]))
+            infoLabel.pack(ipadx=20, ipady=10)
+        except:
+            showwarning(title='Play',message ='Uno\nCatastrophic failure')
+
+    #close the card info
+    def leave(*args):
+        try:
+            infoWindow.destroy()
+        except:
+            showwarning(title='Play',message ='Uno\nCatastrophic failure')
+
+    #the label of the last played card
+    lastPlayed = tkinter.Label(turnWindow, text = f"{gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]}",borderwidth=2, relief="groove")
+    if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['showColor']:
+        lastPlayed.configure(bg = gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayBGColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
+    else:
+        lastPlayed.configure(bg = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget'], fg =gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget'])
+    lastPlayed.grid(column=1, row=1, ipadx=20, ipady=10, sticky="EW")
+    lastPlayed.bind('<Enter>',enter)
+    lastPlayed.bind('<Leave>',leave)
+
+
+    #show who played the last card
+    playerPlayed = tkinter.Label(turnWindow,borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
+    playerPlayed.grid(column=3, row=1, ipadx=20, ipady=10, sticky="EW")
+    if gameData['playerHistory'][len(gameData['playerHistory'])-1] == "NONE":
+        playerPlayed.configure(text = 'Nobody, it\'s the first card')
+    else:
+        playerPlayed.configure(text =f"{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['number']}.{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['name']}")
+
+    #the combobox of the players
+    nextPlayer_var = tkinter.StringVar(value=f'Next player: {nameList[0]}')
+    playerOrderCombobox = ttk.Combobox(turnWindow,state='readonly',values = nameAndCardList, textvariable=nextPlayer_var)
+    nextPlayer_var.trace('w',lambda *args: nextPlayer_var.set(f'Next player: {nameList[0]}'))
+    playerOrderCombobox.grid(column=3, row=0, ipadx=20, ipady=10, sticky="EW")
+
     
-    SettingsWindow = tkinter.Tk()
-    ttk.Label(SettingsWindow,text="Settings",font=("Comic_Sans",10)).grid(column = 0,row = 1, ipadx=20, ipady=10, sticky="EW")
-    ttk.Label(SettingsWindow,text="show card color",font=("Comic_Sans",10)).grid(column = 1,row = 1, ipadx=20, ipady=10, sticky="EW")
-    ttk.Checkbutton(SettingsWindow).grid(column = 2,row = 1, ipadx=20, ipady=10, sticky="EW")
-    SettingsWindow.mainloop()
+    #your cards in combobox or spinbox
+    card_var = tkinter.StringVar()
+    if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['typeOfSelect'] == 'default':
+        cardSelect = ttk.Combobox(turnWindow)
+    else:
+        cardSelect = ttk.Spinbox(turnWindow)
+    cardSelect.configure(state='readonly', textvariable=card_var, values =gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])
+    cardSelect.grid(column=1, row=3, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
+
+    #info about the selected card combobox
+    dataCard= ttk.Combobox(turnWindow, state='readonly')
+    dataCard.grid(column=3, row=3, ipadx=20, ipady=10, sticky="EW")
+    #if you select a card, the info combobox will change
+    def cardData(*args):
+        listOfThings = list(gameData['cardInfo'][card_var.get()].keys())
+        listOfData = list()
+        for x in range(len(listOfThings)):
+            listOfData.append(f"{listOfThings[x]}: {gameData['cardInfo'][card_var.get()][listOfThings[x]]}")
+        dataCard.configure(values =listOfData)
+    card_var.trace('w', cardData)
 
 
-SettingsButton = tkinter.Button(text="Settings",command=settings).grid(column = 7,row = 7, ipadx=20, ipady=10, sticky="EW")
+    def settings():
+        
+        SettingsWindow = tkinter.Tk()
+        ttk.Label(SettingsWindow,text="Settings",font=("Comic_Sans",10)).grid(column = 0,row = 1, ipadx=20, ipady=10, sticky="EW")
+        ttk.Label(SettingsWindow,text="show card color",font=("Comic_Sans",10)).grid(column = 1,row = 1, ipadx=20, ipady=10, sticky="EW")
+        tkinter.Checkbutton(SettingsWindow).grid(column = 2,row = 1, ipadx=20, ipady=10, sticky="EW")
+        SettingsWindow.mainloop()
+
+
+    SettingsButton = ttk.Button(text="Settings",command=settings).grid(column = 3,row = 4, ipadx=20, ipady=10, sticky="EW")
+
+    playButton = ttk.Button(turnWindow, command =lambda: checkIfCardPlayable(card_var.get()), text='Play Selected Card').grid(column = 0,row = 4, ipadx=20, ipady=10, sticky="EW",columnspan= 3)
 
 
 
-
-
-turnWindow.mainloop()
-
+    turnWindow.mainloop()
+playerTurn()
