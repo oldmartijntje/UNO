@@ -11,6 +11,7 @@ appIDorName = 'UNO2byMarjinIDK'
 bots = 4
 players = 2
 cardsPerPlayer = 7
+whenReshuffle = 4
 chosenWildColor = 'Red'
 
 playerDict = {}
@@ -218,11 +219,25 @@ gameData['wildInfo']['colors'] = colorsInJson
 #would you want to play with a unshuffled deck of cards, me neither.
 random.shuffle(gameData['grabCardsDeck'])
 
+def grabCard(activePlayer):
+    global gameData
+    if len(gameData['grabCardsDeck']) <= whenReshuffle:
+        for _ in range(len(gameData['playedCardsDeck'])-1):
+            gameData['grabCardsDeck'].append(gameData['playedCardsDeck'][0])
+            gameData['playedCardsDeck'].pop(0)
+    gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'].append(gameData['grabCardsDeck'][0])
+    gameData['grabCardsDeck'].pop(0)
+
+
 #give players cards
-for i in range(len(gameData['playerList'])):
-    for _ in range(cardsPerPlayer):
-        gameData['playerDict'][gameData['playerList'][i]]['cards'].append(gameData['grabCardsDeck'][0])
-        gameData['grabCardsDeck'].pop(0)
+def giveDeckOfCards():
+    global gameData
+    for i in range(len(gameData['playerList'])):
+        for _ in range(cardsPerPlayer):
+            grabCard(i)
+            
+giveDeckOfCards()
+
 
 #get the first card
 gameData['playedCardsDeck'].append(gameData['grabCardsDeck'][0])
@@ -230,8 +245,8 @@ gameData['playerHistory'].append('NONE')
 gameData['grabCardsDeck'].pop(0)
 
 #print data for some reason
-print(gameData['playerDict'])
-print(gameData['playerDict'][gameData['playerList'][gameData['active']]])
+#print(gameData['playerDict'])
+#print(gameData['playerDict'][gameData['playerList'][gameData['active']]])
 
 
 ######################## Turns of players / bots ########################
@@ -251,20 +266,53 @@ def noIndexError(number, maxNumber, minNumber = 0):
 #play a card
 def playCard(card):
     global gameData
+    global wildWindow
 
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         turnWindow.destroy()
     gameData['playerHistory'].append(gameData['playerList'][gameData['active']])
-    gameData['playedCardsDeck'].append(card)
-    gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)
     if gameData['cardInfo'][card]['suckDragon']:
-        pass
+        for x in range(len(gameData['playerList'])):
+            for _ in range(len(gameData['playerDict'][gameData['playerList'][x]]['cards'])):
+                gameData['playerDict'][gameData['playerList'][x]]['cards'].pop(0)
+        giveDeckOfCards()
+    else:
+        gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
+        gameData['playedCardsDeck'].append(card)
+
     if gameData['cardInfo'][card]['shuffleOrder']:
-        pass
+        placeholder = gameData['playerList'][gameData['active']]
+        gameData['playerList'].pop(gameData['active'])
+        random.shuffle(gameData['playerList'])
+        gameData['playerList'].append(placeholder)
+        gameData['active'] = len(gameData['playerList'])-1
+
     if gameData['cardInfo'][card]['dualWielding']:
-        pass
+        if int(gameData['direction']) > 0:
+            gameData['direction'] = '0'
+        else:
+            gameData['direction'] = '0'
+
     if gameData['cardInfo'][card]['wild']:
-        pass
+        def clickedButton(*args):
+            global gameData
+            gameData['wildInfo']['chosenColor'] = color_var.get()
+            gameData['wildInfo']['played'] = True
+            wildWindow.destroy()
+        def chooseColor(*args):
+            chooseColorButton.configure(state='enabled')
+        wildWindow = tkinter.Tk()
+        tkinter.Label(wildWindow, text = 'choose a color:').grid(row=0,column=0,ipadx=20, ipady=10, sticky="EW")
+        color_var = tkinter.StringVar()
+        colorComboBox =ttk.Combobox(wildWindow,state='readonly',values = gameData['wildInfo']['colors'])
+        colorComboBox.configure(textvariable=color_var)
+        colorComboBox.grid(row=0,column=1,ipadx=20, ipady=10, sticky="EW")
+        chooseColorButton = ttk.Button(wildWindow,state='disabled',text='Play', command=clickedButton)
+        chooseColorButton.grid(row=1,column=0,columnspan=2,ipadx=20, ipady=10, sticky="EW")
+        color_var.trace('w',chooseColor)
+        wildWindow.mainloop()
+    if gameData['cardInfo'][card]['plus'] > 0:
+        gameData['plusCardActive'] += gameData['cardInfo'][card]['plus']
 
 
 #is it playable tho??
@@ -291,6 +339,21 @@ def checkIfCardPlayable(selected,mode = True):
     else:
         showwarning(title='Play',message ='Uno\nYou might want to pick a card')
 
+def nextPlayer(card):
+    direction = str(gameData['direction'])
+    if gameData['cardInfo'][card]['shuffleOrder'] or gameData['cardInfo'][card]['dualWielding']:
+        return gameData['active']
+    else:
+        if gameData['cardInfo'][card]['reverse']:
+            direction = str(int(direction) * -1)
+        if gameData['cardInfo'][card]['skip'] > 0:
+            if int(direction) > 0:
+                direction = str(int(direction)+gameData['cardInfo'][card]['skip'])
+            else:
+                direction = str(int(direction)-gameData['cardInfo'][card]['skip'])
+        return noIndexError(gameData['active'] + int(direction), len(gameData['playerList'])-1)
+
+
 #show what the card does
 def generateCardTip(card):
     text = f"Card color: {gameData['cardInfo'][card]['color']}\nCard type: {gameData['cardInfo'][card]['type']}\n"
@@ -298,18 +361,25 @@ def generateCardTip(card):
         text += 'This card is playable at this moment'
     else:
         text += 'This card is not playable at this moment'
+    text += '\nIf you play this card right now, the following would happen:'
+    if nextPlayer(card) != gameData['active']:
+        nextPlayerReturn = gameData["playerList"][nextPlayer(card)]
+        text += f'\nThe next player would be {gameData["playerDict"][nextPlayerReturn]["number"]}.{gameData["playerDict"][nextPlayerReturn]["name"]}'
     if gameData['cardInfo'][card]['suckDragon']:
-        text += f'\nThis card Takes takes everyones cards and gives them {cardsPerPlayer} new cards.\n(which basically restarts the game)'
+        text += f'\nEveryones cards would be taken and be given {cardsPerPlayer} new cards.'
     if gameData['cardInfo'][card]['shuffleOrder']:
-        text += f'\nThis card shuffles the order of the turns randomly.'
+        text += f'\nThe order of player turns would be shuffled randomly.'
     if gameData['cardInfo'][card]['dualWielding']:
-        text += f'\nThis card allows you to immediately play another card.'
+        text += f'\nAfter this card it\'s your turn again'
     if gameData['cardInfo'][card]['wild']:
-        text += f'\nThis card allows you to choose the color of the card.'
-    if gameData['cardInfo'][card]['reverse']:
-        text += f'\nThis card reverses the order of the players'
-    text += f'\nThis card shuffles the order of the turns randomly.'
-    text += f'\nThis card allows you to immediately play another card'
+        text += f'\nYou would be able to choose the color of the next card.'
+    if gameData['cardInfo'][card]['reverse']and gameData['cardInfo'][card]['shuffleOrder'] == False:
+        text += f'\nThe order of players is reversed'
+    if gameData['cardInfo'][card]['plus'] > 0:
+        text += f'\nThe next player will have to draw {gameData["cardInfo"][card]["plus"]} cards from the pile,\nunless they have a card with the simular function of making people draw cards.'
+    if gameData['cardInfo'][card]['exchangeDecks'] > 0:
+        text += f'\nYou would obtain the cards of the {gameData["cardInfo"][card]["exchangeDecks"]}th opponent, heading the opposite way of the playing direction'
+    
 
 
     return text
@@ -366,8 +436,8 @@ def playerTurn():
             infoLabel = ttk.Label(infoWindow)
             infoLabel.configure(text=generateCardTip(gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]))
             infoLabel.pack(ipadx=20, ipady=10)
-        except:
-            showwarning(title='Play',message ='Uno\nCatastrophic failure')
+        except Exception as e:
+            showwarning(title='Play',message =f'Uno\nCatastrophic failure')
 
     #close the card info
     def leave(*args):
