@@ -8,6 +8,8 @@ import random
 from tkinter.messagebox import showerror, showinfo, showwarning
 import tkinter.messagebox
 
+stopTheGame = False
+
 #app data
 appIDorName = 'UNO2byMarjinIDK'
 windowTitles = 'UNO'
@@ -40,9 +42,18 @@ def gotAchievement(title, description, message):
         data = accounts_omac.saveAccount(data, configSettings)
         data['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':data["time"]}
         showinfo(title=windowTitles,message =f'''Congratulations, you got the {title} achievement!
-        {description}
-        {message}''')
+AKA: {description}
+
+{message}''')
         data = accounts_omac.saveAccount(data, configSettings)
+
+def accountDataUpdate(thing):
+    global data
+    if thing not in data['appData'][appIDorName]:
+        data['appData'][appIDorName][thing] = 1
+    else:
+        data['appData'][appIDorName][thing] += 1
+    data = accounts_omac.saveAccount(data, configSettings)
 
 oopsieErrorCode = '''OOPSIE WOOPSIE!!
 UwU We made a fucky wucky!! A
@@ -279,13 +290,10 @@ def grabCard(activePlayer, achievement = True):
 
     else:
         if achievement:
-            if 'grabs' not in data['appData'][appIDorName]:
-                data['appData'][appIDorName]['grabs'] = 1
-            else:
-                data['appData'][appIDorName]['grabs'] += 1
+            accountDataUpdate('grabs')
             if data['appData'][appIDorName]['grabs'] == 100:
                 gotAchievement('100 cards', 'You got 100 cards, noice', 'you are either extremely bad, or you just played this a lot')
-            if data['appData'][appIDorName]['grabs'] == 1000:
+            elif data['appData'][appIDorName]['grabs'] == 1000:
                 gotAchievement('1000 cards', 'You got 1000 cards, that\'s a lot', 'you didn\'t farm this achievement, right?')
         gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'].append(gameData['grabCardsDeck'][0])
         gameData['grabCardsDeck'].pop(0)
@@ -297,7 +305,7 @@ def giveDeckOfCards(achievements = True):
     for i in range(len(gameData['playerList'])):
         for _ in range(cardsPerPlayer):
             grabCard(i, achievements)
-            #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Red Reverse')
+        gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Wild')
             #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Red Skip')
 
             
@@ -313,14 +321,40 @@ while gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCards
     gameData['grabCardsDeck'].pop(0)
 
 giveDeckOfCards(False)
-
+accountDataUpdate('gamesPlayed')
+if data['appData'][appIDorName]['gamesPlayed'] == 100:
+    gotAchievement('100 times played', 'You played, or atleast, started this game 100 times', 'are you a fan of it? or are you just farming achievements?')
+elif data['appData'][appIDorName]['gamesPlayed'] == 10000:
+    gotAchievement('10000 times played', 'You played, or atleast, started this game 10000 times', 'seriously bro, stop it, or not if you like it. Tho i sthill think it\'s mental to play 10000 times')
 ######################## Turns of players / bots ########################
 
+def someoneWon():
+    global gameData
+    gameData['statistics']['winOrder'].append(gameData['playerList'][gameData['active']])
+    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
+        gotAchievement('first finish', 'the first human player to finish', 'good job little fella, your first win. you will be a legend someday')
+        accountDataUpdate('finishes')
+        if data['appData'][appIDorName]['finishes'] == 5:
+            gotAchievement('5 finishes', '5 local players finished with your account logged in', 'good job, ur probably a pro UNO player now')
+        elif data['appData'][appIDorName]['finishes'] == 69:
+            gotAchievement('69 finishes', '69 local players finished with your account logged in', 'Even if you farmed this, it\'s still impressive. it probably took you a while')
+    else:
+        gotAchievement('first bot finish', 'the first bot player to finish', 'yeah, a bot just finished, i know, that\'s a thing that can happen, probably didn\'t know that, don\'t you?')
+    gameData['playerList'].pop(gameData['active'])
+    if int(gameData['direction']) > 0:
+        gameData['active'] = noIndexError(gameData['active'] - 1,len(gameData['playerList'])-1)
+    else:
+        gameData['active'] = noIndexError(gameData['active'] + 1,len(gameData['playerList'])-1)
+
+
+
+
 def on_closing():
-    global data
+    global data, stopTheGame
     if tkinter.messagebox.askokcancel(windowTitles, f"Your game will be terminated\nShould we proceed?", icon ='warning'):
         data = accounts_omac.saveAccount(data, configSettings)
-        exit()
+        turnWindow.destroy()
+        stopTheGame = True
 
 #to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0
 def noIndexError(number, maxNumber, minNumber = 0):
@@ -371,6 +405,7 @@ def playCard(card):
     else:
         gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
         gameData['playedCardsDeck'].append(card)
+        
 
     if gameData['cardInfo'][card]['shuffleOrder']:
         placeholder = gameData['playerList'][gameData['active']]
@@ -404,6 +439,8 @@ def playCard(card):
         color_var.trace('w',chooseColor)
         wildWindow.protocol("WM_DELETE_WINDOW", on_closing)
         wildWindow.mainloop()
+    else:
+        gameData['wildInfo']['played'] = False
     if gameData['cardInfo'][card]['plus'] != 0:
         gameData['plusCardActive'] += gameData['cardInfo'][card]['plus']
     if gameData['cardInfo'][card]['reverse']:
@@ -420,6 +457,9 @@ def playCard(card):
             gameData['direction'] = str(int(gameData['direction'])-1)
         else:
             gameData['direction'] = str(int(gameData['direction'])+1)
+    if len(gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards']) == 0:
+        someoneWon()
+    
 
 
 #is it playable tho??
@@ -453,8 +493,20 @@ def checkIfCardPlayable(selected,mode = True):
         else:
             if mode == False:
                 return False
+            else:
+                accountDataUpdate('can\'t play that')
+                if data['appData'][appIDorName]['can\'t play that'] == 100:
+                    gotAchievement('100 nopes', 'u tried 100 times', 'You can\'t play that card right now')
+                elif data['appData'][appIDorName]['can\'t play that'] == 1000:
+                    gotAchievement('1000 nopes', 'u tried 1000 times', 'you still can\'t play that card right now')
     else:
         showwarning(title=windowTitles,message ='Uno\nYou might want to pick a card')
+        if 'pickACardError' not in data['appData'][appIDorName]:
+            data['appData'][appIDorName]['pickACardError'] = 1
+        else:
+            data['appData'][appIDorName]['pickACardError'] += 1
+        if data['appData'][appIDorName]['pickACardError'] == 69:
+            gotAchievement('fergot to pick a card', 'you fergot to pick a card 69 times.', 'that you forget to pick a card once, okay, 7 times, sure. but 69 times?????')
 
 #who is the next player if you play this car
 def nextPlayer(card):
@@ -665,5 +717,22 @@ def betweenTruns():
         playerTurn()
 
 
-while len(gameData['playerList']) > 1:
+while len(gameData['playerList']) > 1 and not stopTheGame:
     betweenTruns()
+if not stopTheGame:
+    gotAchievement('first ending', 'the first time you played till the end of the game', 'you just witnessed a legendary moment, people don\'t come over here often\nMost of the time they already have left because of ragequitting')
+else:
+    gotAchievement('exit', 'you closed the game', 'you didn\'t like it? :\'(')
+endingResultText = ''
+for x in range(len(gameData['statistics']['winOrder'])):
+    if x == 0:
+        endingResultText += f"Winner: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+    elif x == 1:
+        endingResultText += f"Second place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+    elif x == 2:
+        endingResultText += f"Third place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+    else:
+        endingResultText += f"{x}th: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+for y in range(len(gameData['playerList'])):
+    endingResultText+= f"Not finished: {gameData['playerDict'][gameData['playerList'][y]]['number']}.{gameData['playerDict'][gameData['playerList'][y]]['name']}\n"
+showinfo(title=windowTitles,message =f'{endingResultText}')
