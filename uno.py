@@ -264,7 +264,7 @@ gameData['wildInfo']['colors'] = colorsInJson
 #would you want to play with a unshuffled deck of cards, me neither.
 random.shuffle(gameData['grabCardsDeck'])
 
-def grabCard(activePlayer):
+def grabCard(activePlayer, achievement = True):
     global gameData
     if len(gameData['grabCardsDeck']) <= whenReshuffle:
         if len(gameData['playedCardsDeck']) == 1:
@@ -278,24 +278,25 @@ def grabCard(activePlayer):
         gotAchievement('oopsie Woopsie', 'You got this error code, noice' , oopsieErrorCode)
 
     else:
-        if 'grabs' not in data['appData'][appIDorName]:
-            data['appData'][appIDorName]['grabs'] = 1
-        else:
-            data['appData'][appIDorName]['grabs'] += 1
-        if data['appData'][appIDorName]['grabs'] == 100:
-            gotAchievement('100 cards', 'You got 100 cards, noice', 'you are either extremely bad, or you just played this a lot')
-        if data['appData'][appIDorName]['grabs'] == 1000:
-            gotAchievement('1000 cards', 'You got 1000 cards, that\'s a lot', 'you didn\'t farm this achievement, right?')
+        if achievement:
+            if 'grabs' not in data['appData'][appIDorName]:
+                data['appData'][appIDorName]['grabs'] = 1
+            else:
+                data['appData'][appIDorName]['grabs'] += 1
+            if data['appData'][appIDorName]['grabs'] == 100:
+                gotAchievement('100 cards', 'You got 100 cards, noice', 'you are either extremely bad, or you just played this a lot')
+            if data['appData'][appIDorName]['grabs'] == 1000:
+                gotAchievement('1000 cards', 'You got 1000 cards, that\'s a lot', 'you didn\'t farm this achievement, right?')
         gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'].append(gameData['grabCardsDeck'][0])
         gameData['grabCardsDeck'].pop(0)
 
 
 #give players cards
-def giveDeckOfCards():
+def giveDeckOfCards(achievements = True):
     global gameData
     for i in range(len(gameData['playerList'])):
         for _ in range(cardsPerPlayer):
-            grabCard(i)
+            grabCard(i, achievements)
             #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Red Reverse')
             #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Red Skip')
 
@@ -311,7 +312,7 @@ while gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCards
     gameData['playerHistory'].append('NONE')
     gameData['grabCardsDeck'].pop(0)
 
-giveDeckOfCards()
+giveDeckOfCards(False)
 
 ######################## Turns of players / bots ########################
 
