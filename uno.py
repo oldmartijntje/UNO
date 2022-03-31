@@ -8,24 +8,31 @@ import random
 from tkinter.messagebox import showerror, showinfo, showwarning
 import tkinter.messagebox
 
+#app data
 appIDorName = 'UNO2byMarjinIDK'
 windowTitles = 'UNO'
+
+#create seed
+seed = accounts_omac.easy.stringToAscii(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+if False:
+    seed = 1
+random.seed(seed)
+print(seed)
 
 #account login
 configSettings = accounts_omac.configFileConsole()
 data = accounts_omac.defaultConfigurations.defaultLoadingTkinter(configSettings)
 if data == False:
     exit()
-'''
+
 if appIDorName not in data['appData']:
-    data['appData'][appIDorName] = []
+    data['appData'][appIDorName] = {}
 if appIDorName not in data['collectables']:
-    data['collectables'][appIDorName] = []
-'''
+    data['collectables'][appIDorName] = {}
 if appIDorName not in data['achievements']:
     data['achievements'][appIDorName] = {}
 
-
+#create achievements
 def gotAchievement(title, description, message):
     global data
     now = datetime.now()
@@ -271,6 +278,14 @@ def grabCard(activePlayer):
         gotAchievement('oopsie Woopsie', 'You got this error code, noice' , oopsieErrorCode)
 
     else:
+        if 'grabs' not in data['appData'][appIDorName]:
+            data['appData'][appIDorName]['grabs'] = 1
+        else:
+            data['appData'][appIDorName]['grabs'] += 1
+        if data['appData'][appIDorName]['grabs'] == 100:
+            gotAchievement('100 cards', 'You got 100 cards, noice', 'you are either extremely bad, or you just played this a lot')
+        if data['appData'][appIDorName]['grabs'] == 1000:
+            gotAchievement('1000 cards', 'You got 1000 cards, that\'s a lot', 'you didn\'t farm this achievement, right?')
         gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'].append(gameData['grabCardsDeck'][0])
         gameData['grabCardsDeck'].pop(0)
 
@@ -424,6 +439,16 @@ def checkIfCardPlayable(selected,mode = True):
                 return True
             else:
                 playCard(selected)
+        elif gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['alwaysPlayable'] and not gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['wild']:
+            if mode == False:
+                return True
+            else:
+                playCard(selected)
+        elif gameData['wildInfo']['played'] and gameData['cardInfo'][selected]['color'] == gameData['wildInfo']['chosenColor']:
+            if mode == False:
+                return True
+            else:
+                playCard(selected)
         else:
             if mode == False:
                 return False
@@ -489,10 +514,16 @@ def generateCardTip(card):
     return text
 
 def grabFromPile(*args):
+ 
     if gameData['plusCardActive'] > 0:
-        for _ in range(gameData['plusCardActive'] + 1):
+        for _ in range(gameData['plusCardActive']):
             grabCard(gameData['active'])
+        showinfo(title=windowTitles,message =f'You grabbed {gameData["plusCardActive"]} cards, since the last card was a + card.\nSelect again which card you want to play')
         gameData['plusCardActive'] = 0
+        generateNameList()
+        cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
+        playerOrderCombobox.configure(value=nameAndCardList)
+        return
     else:
         grabCard(gameData['active'])
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human' or True:
@@ -523,8 +554,6 @@ def playerTurn():
 
     #the combobox with player order
     generateNameList()
-
-
 
     #labels
     nameLabel = tkinter.Label(turnWindow, text =f"Current player: {gameData['playerDict'][gameData['playerList'][activePlayer]]['number']}.{gameData['playerDict'][gameData['playerList'][gameData['active']]]['name']}",borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
@@ -557,7 +586,10 @@ def playerTurn():
     #the label of the last played card
     lastPlayed = tkinter.Label(turnWindow, text = f"{gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]}",borderwidth=2, relief="groove")
     if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['showColor']:
-        lastPlayed.configure(bg = gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayBGColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
+        if gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['wild']:
+            lastPlayed.configure(bg = gameData['wildInfo']['chosenColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
+        else:
+            lastPlayed.configure(bg = gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayBGColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
     else:
         lastPlayed.configure(bg = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget'], fg =gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget'])
     lastPlayed.grid(column=1, row=1, ipadx=20, ipady=10, sticky="EW")
