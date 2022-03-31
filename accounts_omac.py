@@ -1,4 +1,4 @@
-version = '2.3.0'
+version = '2.4.0'
 #code made by OldMartijntje
 
 def configFileConsole(pathLocation = False):
@@ -105,7 +105,7 @@ def removeCharacters(name, removeCharacters = []):
     '''this only keeps numbers and letters in the string you provide, unless you give a list of characters, then it removes those characters instead'''
     import string
     name = name.replace(" ", "")
-    if removeCharacters == []:
+    if removeCharacters == '' or removeCharacters == []:
         for character in string.punctuation:
             name = name.replace(character, '')
     else:
@@ -241,3 +241,11 @@ class easy:
             beginList.append(list_all_items[randomNumber])
             list_all_items.pop(randomNumber)
         return beginList
+    
+    def stringToAscii(seedString:str): #turns everything into ther ASCII value
+        seedList = []
+        for x in seedString:
+            seedList.append(ord(x))#change every character into its ASCII value
+        seedString = ''.join([str(elem) for elem in seedList])#add list together into string
+        seed = int(seedString)
+        return seed
