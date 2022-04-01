@@ -406,7 +406,12 @@ def playCard(card):
     else:
         gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
         gameData['playedCardsDeck'].append(card)
-        
+    if gameData['cardInfo'][card]['exchangeDecks'] > 0:
+        listOfDecks = []
+        for x in range(len(gameData['playerList'])):
+            listOfDecks.append(gameData['playerDict'][gameData['playerList'][x]]['cards'])
+        for x in range(len(gameData['playerList'])):
+            gameData['playerDict'][gameData['playerList'][x]]['cards'] = noIndexError(listOfDecks[x-gameData['cardInfo'][card]['exchangeDecks']])
 
     if gameData['cardInfo'][card]['shuffleOrder']:
         placeholder = gameData['playerList'][gameData['active']]
@@ -525,11 +530,13 @@ def checkIfCardPlayable(selected,mode = True):
             gotAchievement('fergot to pick a card', 'you fergot to pick a card 69 times.', 'that you forget to pick a card once, okay, 7 times, sure. but 69 times?????')
 
 #who is the next player if you play this car
-def nextPlayer(card):
-    direction = str(gameData['direction'])
-    if gameData['cardInfo'][card]['shuffleOrder']:
-        return gameData['active']
+def nextPlayer(card = 'NONE'):
+    if card == 'NONE':
+        direction = str(gameData['direction'])
+        return noIndexError(gameData['active'] + int(direction), len(gameData['playerList'])-1)
     else:
+        direction = str(gameData['direction'])
+        
         if gameData['cardInfo'][card]['reverse']:
             direction = str(int(direction) * -1)
         if gameData['cardInfo'][card]['skip'] > 0:
@@ -556,12 +563,12 @@ def generateCardTip(card):
     if nextPlayer(card) != gameData['active']:
         nextPlayerReturn = gameData["playerList"][nextPlayer(card)]
         text += f'\nThe next player would be {gameData["playerDict"][nextPlayerReturn]["number"]}.{gameData["playerDict"][nextPlayerReturn]["name"]}'
+    else:
+        text += f'\nAfter this card it\'s your turn again'
     if gameData['cardInfo'][card]['suckDragon']:
         text += f'\nEveryones cards would be taken and be given {cardsPerPlayer} new cards.'
     if gameData['cardInfo'][card]['shuffleOrder']:
         text += f'\nThe order of player turns would be shuffled randomly.'
-    if gameData['cardInfo'][card]['dualWielding']:
-        text += f'\nAfter this card it\'s your turn again'
     if gameData['cardInfo'][card]['wild']:
         text += f'\nYou would be able to choose the color of the next card.'
     if gameData['cardInfo'][card]['reverse']and gameData['cardInfo'][card]['shuffleOrder'] == False:
@@ -759,6 +766,11 @@ def botTurn():
         else:
             colorsDict[gameData['cardInfo'][current]['color']] = 1
 
+    playerWithCards= {}    
+    for i in range(len(gameData['playerList'])):
+        playerWithCards[gameData['playerList'][i]] = len(gameData['playerDict'][gameData['playerList'][i]]['cards'])
+
+
     for i in range(len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])):
         current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]
         if not checkIfCardPlayable(current, False):
@@ -767,7 +779,7 @@ def botTurn():
             listOfMoves.append(1)
             if gameData['cardInfo'][current]['wild']:
                 if gameData['cardInfo'][lastPlayed]['color'] in colorsDict:
-                    listOfMoves[i] += 1
+                    listOfMoves[i] += 3
                 else:
                     listOfMoves[i] += 5
             if gameData['cardInfo'][lastPlayed]['type'] == gameData['cardInfo'][current]['type']:
@@ -777,6 +789,46 @@ def botTurn():
                     listOfMoves[i] += 6
             if gameData['cardInfo'][current]['suckDragon']:
                 listOfMoves[i] -= 1
+            if gameData['playerList'][nextPlayer(current)] == gameData['playerList'][activePlayer]:
+                if gameData['cardInfo'][current]['plus'] > 0:
+                    listOfMoves[i] -= 2
+                else:
+                    listOfMoves[i] += (gameData['cardInfo'][current]['plus'] + 3)
+            elif gameData['playerList'][nextPlayer(current)] == min(playerWithCards, key=playerWithCards.get):
+                if gameData['cardInfo'][current]['shuffleOrder']:
+                    listOfMoves[i] += 2
+                elif gameData['cardInfo'][current]['plus'] > 0:
+                    listOfMoves[i] += 5
+                else:
+                    listOfMoves[i] -= 2
+            else:
+                listOfMoves[i] += 2
+            if len(gameData['playerDict'][gameData['playerList'][nextPlayer(current)]]['cards']) > len(gameData['playerDict'][gameData['playerList'][nextPlayer()]]['cards']):
+                if not gameData['cardInfo'][current]['shuffleOrder']:
+                    listOfMoves[i] += 2
+            if gameData['cardInfo'][current]['alwaysPlayable']:
+                listOfMoves[i] -= 2
+            if gameData['cardInfo'][current]['exchangeDecks'] > 0:
+                numberOfYourCards = len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])
+                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer-gameData['cardInfo'][current]['exchangeDecks'])]]['cards'])
+                if numberOfCards < numberOfYourCards-1:
+                    listOfMoves[i] += (3 + ((numberOfYourCards-1) - numberOfCards))
+                elif numberOfCards == numberOfYourCards-1:
+                    listOfMoves[i] += 2
+                else:
+                    listOfMoves[i] -= 2
+                numberOfNextPlayersCards = len(gameData['playerDict'][gameData['playerList'][nextPlayer(current)]]['cards'])
+                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(nextPlayer(current)-gameData['cardInfo'][current]['exchangeDecks'])]]['cards'])
+                if numberOfCards < numberOfNextPlayersCards-1:
+                    listOfMoves[i] -= (1 + ((numberOfNextPlayersCards) - numberOfCards))
+                elif numberOfCards == numberOfNextPlayersCards:
+                    listOfMoves[i] += 1
+                else:
+                    listOfMoves[i] += (2 + (numberOfCards - (numberOfNextPlayersCards)))
+            if listOfMoves[i] < 1:
+                listOfMoves[i] = 1
+            
+
                 
 
 
