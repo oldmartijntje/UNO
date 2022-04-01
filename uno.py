@@ -223,11 +223,28 @@ else:
 ######################## Player Select Menu ########################
 
 
-'''
+
 playerSelectWindow = tkinter.Tk()
 
 def changedSomething(*args):
-    print('e')
+    if playersAmountSelect_var.get() + botsAmountSelect_var.get() > 1:
+        playButton.configure(state='normal')
+    else:
+        playButton.configure(state='disabled')
+
+def selectedPlayers(*args):
+    global data_cardsList
+    global bots, players
+    #amounts of times to import the carddeck
+    totalAmount = playersAmountSelect_var.get() + botsAmountSelect_var.get()
+    data_cardsList = [val for val in data_cardsList for _ in range((totalAmount + 10) // 10)]
+    bots = botsAmountSelect_var.get()
+    players = playersAmountSelect_var.get()
+    playerSelectWindow.destroy()
+
+    
+
+
 
 playersAmountSelect_var = tkinter.IntVar()
 botsAmountSelect_var = tkinter.IntVar()
@@ -235,10 +252,12 @@ spinboxPlayers = ttk.Spinbox(playerSelectWindow, from_=float("0"), to=float("inf
 spinboxBots = ttk.Spinbox(playerSelectWindow, from_=float("0"), to=float("inf"), textvariable=botsAmountSelect_var).grid(column=1, row=1, ipadx=20, ipady=10)
 playerLabelSpinbox = tkinter.Label(playerSelectWindow, text = 'amount of players:').grid(column=0, row=0, ipadx=20, ipady=10)
 botLabelSpinbox = tkinter.Label(playerSelectWindow, text = 'amount of bots:').grid(column=0, row=1, ipadx=20, ipady=10)
+playButton = ttk.Button(playerSelectWindow, text='Play', state='disabled', command=selectedPlayers)
+playButton.grid(column=0, row=2, ipadx=20, ipady=10,columnspan=2, sticky="EW")
 botsAmountSelect_var.trace('w', changedSomething)
 playersAmountSelect_var.trace('w', changedSomething)
 playerSelectWindow.mainloop()
-'''
+
 
 
 ######################## Game Setup ########################
