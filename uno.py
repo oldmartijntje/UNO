@@ -17,7 +17,7 @@ windowTitles = 'UNO'
 #create seed
 seed = accounts_omac.easy.stringToAscii(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 if False:
-    seed = 1
+    seed = 4852474849475048505044324948585256585148
 random.seed(seed)
 print(seed)
 
@@ -305,7 +305,7 @@ def giveDeckOfCards(achievements = True):
     for i in range(len(gameData['playerList'])):
         for _ in range(cardsPerPlayer):
             grabCard(i, achievements)
-        gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Wild')
+        #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Wild')
             #gameData['playerDict'][gameData['playerList'][i]]['cards'].append('Red Skip')
 
             
@@ -388,11 +388,12 @@ def playCard(card):
     if gameData['plusCardActive'] > 0 and gameData['cardInfo'][card]['plus'] == 0:
         for _ in range(gameData['plusCardActive']):
             grabCard(gameData['active'])
-        showinfo(title=windowTitles,message =f'You grabbed {gameData["plusCardActive"]} cards, since the last card was a + card.\nSelect again which card you want to play')
+        if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
+            showinfo(title=windowTitles,message =f'You grabbed {gameData["plusCardActive"]} cards, since the last card was a + card.\nSelect again which card you want to play')
+            generateNameList()
+            cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
+            playerOrderCombobox.configure(value=nameAndCardList)
         gameData['plusCardActive'] = 0
-        generateNameList()
-        cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
-        playerOrderCombobox.configure(value=nameAndCardList)
         return
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         turnWindow.destroy()
@@ -420,7 +421,7 @@ def playCard(card):
         else:
             gameData['direction'] = '0'
 
-    if gameData['cardInfo'][card]['wild']:
+    if gameData['cardInfo'][card]['wild'] and gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         def clickedButton(*args):
             global gameData
             gameData['wildInfo']['chosenColor'] = color_var.get()
@@ -439,6 +440,19 @@ def playCard(card):
         color_var.trace('w',chooseColor)
         wildWindow.protocol("WM_DELETE_WINDOW", on_closing)
         wildWindow.mainloop()
+
+    elif gameData['cardInfo'][card]['wild'] and gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Bot':
+        activePlayer = gameData['active']
+        colorsDict = {}
+        for i in range(len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])):
+            current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]
+            if gameData['cardInfo'][current]['color'] in colorsDict:
+                colorsDict[gameData['cardInfo'][current]['color']] += 1
+            else:
+                colorsDict[gameData['cardInfo'][current]['color']] = 1
+        gameData['wildInfo']['chosenColor'] = max(colorsDict, key=colorsDict.get)
+        gameData['wildInfo']['played'] = True
+
     else:
         gameData['wildInfo']['played'] = False
     if gameData['cardInfo'][card]['plus'] != 0:
@@ -465,7 +479,7 @@ def playCard(card):
 #is it playable tho??
 def checkIfCardPlayable(selected,mode = True):
     if selected != '':
-        if gameData['cardInfo'][selected]['alwaysPlayable'] == True:
+        if gameData['cardInfo'][selected]['alwaysPlayable']:
             if mode == False:
                 return True
             else:
@@ -678,7 +692,7 @@ def playerTurn():
     
     #your cards in combobox or spinbox
     card_var = tkinter.StringVar()
-    if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['typeOfSelect'] == 'default':
+    if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['typeOfSelect'] == 'default':
         cardSelect = ttk.Combobox(turnWindow)
     else:
         cardSelect = ttk.Spinbox(turnWindow)
@@ -729,6 +743,39 @@ def playerTurn():
     turnWindow.protocol("WM_DELETE_WINDOW", on_closing)
     turnWindow.mainloop()
 
+
+def botTurn():
+    global gameData
+    activePlayer = gameData['active']
+    listOfMoves = []
+    colorsDict = {}
+    for i in range(len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])):
+        current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]
+        if gameData['cardInfo'][current]['color'] in colorsDict:
+            colorsDict[gameData['cardInfo'][current]['color']] += 1
+        else:
+            colorsDict[gameData['cardInfo'][current]['color']] = 1
+
+    for i in range(len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])):
+        current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]
+        if not checkIfCardPlayable(current, False):
+            listOfMoves.append(-1)
+        else:
+            gameData['cardInfo'][current]['wild']
+            listOfMoves.append(1)
+
+
+
+
+
+    if max(listOfMoves) != -1:
+        playCard(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][listOfMoves.index(max(listOfMoves))])
+    else:
+        grabCard(gameData['active'])
+
+
+
+
 def betweenTruns():
     gameData['active'] = noIndexError(gameData['active'] + int(gameData['direction']), len(gameData['playerList'])-1)
     if int(gameData['direction']) > 0:
@@ -737,6 +784,8 @@ def betweenTruns():
         gameData['direction'] = '-1'
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         playerTurn()
+    else:
+        botTurn()
 
 
 while len(gameData['playerList']) > 1 and not stopTheGame:
