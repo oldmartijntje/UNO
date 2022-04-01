@@ -450,6 +450,8 @@ def playCard(card):
                 colorsDict[gameData['cardInfo'][current]['color']] += 1
             else:
                 colorsDict[gameData['cardInfo'][current]['color']] = 1
+        while max(colorsDict, key=colorsDict.get) not in gameData['wildInfo']['colors']:
+            del colorsDict[max(colorsDict, key=colorsDict.get)]
         gameData['wildInfo']['chosenColor'] = max(colorsDict, key=colorsDict.get)
         gameData['wildInfo']['played'] = True
 
@@ -746,6 +748,7 @@ def playerTurn():
 
 def botTurn():
     global gameData
+    lastPlayed = gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]
     activePlayer = gameData['active']
     listOfMoves = []
     colorsDict = {}
@@ -761,8 +764,20 @@ def botTurn():
         if not checkIfCardPlayable(current, False):
             listOfMoves.append(-1)
         else:
-            gameData['cardInfo'][current]['wild']
             listOfMoves.append(1)
+            if gameData['cardInfo'][current]['wild']:
+                if gameData['cardInfo'][lastPlayed]['color'] in colorsDict:
+                    listOfMoves[i] += 1
+                else:
+                    listOfMoves[i] += 5
+            if gameData['cardInfo'][lastPlayed]['type'] == gameData['cardInfo'][current]['type']:
+                if max(colorsDict, key=colorsDict.get) == gameData['cardInfo'][current]['color']:
+                    listOfMoves[i] += 8
+                else:
+                    listOfMoves[i] += 6
+            if gameData['cardInfo'][current]['suckDragon']:
+                listOfMoves[i] -= 1
+                
 
 
 
