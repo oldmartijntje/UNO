@@ -16,8 +16,8 @@ windowTitles = 'UNO'
 
 #create seed
 seed = accounts_omac.easy.stringToAscii(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
-if False:
-    seed = 4852474849475048505044324948585256585148
+if True:
+    seed = 4852474849475048505044324951585150585154
 random.seed(seed)
 print(seed)
 
@@ -399,9 +399,12 @@ def playCard(card):
         turnWindow.destroy()
     gameData['playerHistory'].append(gameData['playerList'][gameData['active']])
     if gameData['cardInfo'][card]['suckDragon']:
+        gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
         for x in range(len(gameData['playerList'])):
             for _ in range(len(gameData['playerDict'][gameData['playerList'][x]]['cards'])):
+                gameData['playedCardsDeck'].append(gameData['playerDict'][gameData['playerList'][x]]['cards'][0])
                 gameData['playerDict'][gameData['playerList'][x]]['cards'].pop(0)
+        gameData['playedCardsDeck'].append(card)
         giveDeckOfCards()
     else:
         gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
@@ -411,7 +414,7 @@ def playCard(card):
         for x in range(len(gameData['playerList'])):
             listOfDecks.append(gameData['playerDict'][gameData['playerList'][x]]['cards'])
         for x in range(len(gameData['playerList'])):
-            gameData['playerDict'][gameData['playerList'][x]]['cards'] = noIndexError(listOfDecks[x-gameData['cardInfo'][card]['exchangeDecks']])
+            gameData['playerDict'][gameData['playerList'][x]]['cards'] = listOfDecks[noIndexError(x-gameData['cardInfo'][card]['exchangeDecks'], len(gameData['playerList'])-1)]
 
     if gameData['cardInfo'][card]['shuffleOrder']:
         placeholder = gameData['playerList'][gameData['active']]
@@ -755,6 +758,7 @@ def playerTurn():
 
 def botTurn():
     global gameData
+    
     lastPlayed = gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]
     activePlayer = gameData['active']
     listOfMoves = []
@@ -772,7 +776,7 @@ def botTurn():
 
 
     for i in range(len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])):
-        current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]
+        current = gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][i]     
         if not checkIfCardPlayable(current, False):
             listOfMoves.append(-1)
         else:
@@ -810,7 +814,7 @@ def botTurn():
                 listOfMoves[i] -= 2
             if gameData['cardInfo'][current]['exchangeDecks'] > 0:
                 numberOfYourCards = len(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])
-                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer-gameData['cardInfo'][current]['exchangeDecks'])]]['cards'])
+                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(activePlayer-gameData['cardInfo'][current]['exchangeDecks'], len(gameData['playerList'])-1)]]['cards'])
                 if numberOfCards < numberOfYourCards-1:
                     listOfMoves[i] += (3 + ((numberOfYourCards-1) - numberOfCards))
                 elif numberOfCards == numberOfYourCards-1:
@@ -818,7 +822,7 @@ def botTurn():
                 else:
                     listOfMoves[i] -= 2
                 numberOfNextPlayersCards = len(gameData['playerDict'][gameData['playerList'][nextPlayer(current)]]['cards'])
-                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(nextPlayer(current)-gameData['cardInfo'][current]['exchangeDecks'])]]['cards'])
+                numberOfCards = len(gameData['playerDict'][gameData['playerList'][noIndexError(nextPlayer(current)-gameData['cardInfo'][current]['exchangeDecks'], len(gameData['playerList'])-1)]]['cards'])
                 if numberOfCards < numberOfNextPlayersCards-1:
                     listOfMoves[i] -= (1 + ((numberOfNextPlayersCards) - numberOfCards))
                 elif numberOfCards == numberOfNextPlayersCards:
@@ -834,8 +838,9 @@ def botTurn():
 
 
 
-
-    if max(listOfMoves) != -1:
+    if gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][listOfMoves.index(max(listOfMoves))] == '+4':
+        pass
+    if max(listOfMoves) != -1: 
         playCard(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][listOfMoves.index(max(listOfMoves))])
     else:
         grabCard(gameData['active'])
