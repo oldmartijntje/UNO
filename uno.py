@@ -394,7 +394,7 @@ def playCard(card):
         cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
         playerOrderCombobox.configure(value=nameAndCardList)
         return
-    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human' or True:
+    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         turnWindow.destroy()
     gameData['playerHistory'].append(gameData['playerList'][gameData['active']])
     if gameData['cardInfo'][card]['suckDragon']:
@@ -551,7 +551,12 @@ def generateCardTip(card):
     if gameData['cardInfo'][card]['reverse']and gameData['cardInfo'][card]['shuffleOrder'] == False:
         text += f'\nThe order of players is reversed'
     if gameData['cardInfo'][card]['plus'] != 0:
-        text += f'\nThe next player will have to draw {gameData["cardInfo"][card]["plus"]} cards from the pile,\nunless they have a card with the simular function of making people draw cards.'
+        if gameData['plusCardActive'] > 0:
+            text += f'\nThe next player will have to draw {gameData["cardInfo"][card]["plus"]} cards from the pile + {gameData["plusCardActive"]} from previous cards,\nunless they have a card with the simular function of making people draw cards.'
+        else:
+            text += f'\nThe next player will have to draw {gameData["cardInfo"][card]["plus"]} cards from the pile,\nunless they have a card with the simular function of making people draw cards.'
+    elif gameData['plusCardActive'] > 0:
+        text += f'\nYou will have to draw {gameData["plusCardActive"]} cards because of previous cards.'
     if gameData['cardInfo'][card]['exchangeDecks'] > 0:
         if gameData['cardInfo'][card]['exchangeDecks'] == 1:
             text += f'\nEveryone switches cards with the {gameData["cardInfo"][card]["exchangeDecks"]}st player before them'
@@ -579,7 +584,7 @@ def grabFromPile(*args):
         return
     else:
         grabCard(gameData['active'])
-    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human' or True:
+    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         turnWindow.destroy()
 
 
@@ -618,27 +623,33 @@ def playerTurn():
     tkinter.Label(turnWindow,text = 'Select card to play:', bg =defaultBGwindow, fg= defaultFG).grid(column=0, row=4, ipadx=20, ipady=10, sticky="EW")  
 
     #what happends when you touch the label with the last played card
-    def enter(*args):
+    def entering(cardToShow):
         global infoWindow
         try:
             infoWindow = tkinter.Tk()
             infoWindow.geometry(f'+{infoWindow.winfo_pointerx()-infoWindow.winfo_rootx()+2}+{infoWindow.winfo_pointery()-infoWindow.winfo_rooty()+2}')
             infoLabel = ttk.Label(infoWindow)
-            infoLabel.configure(text=generateCardTip(gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]))
+            infoLabel.configure(text=generateCardTip(cardToShow))
             infoLabel.pack(ipadx=20, ipady=10)
         except Exception as e:
             showwarning(title=windowTitles,message =f'Uno\nCatastrophic failure')
 
+    def enterPrevious(*args):
+        entering(gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1])
+
+    def enterSelected(*args):
+        if card_var.get() != '':
+            entering(card_var.get())
     #close the card info
     def leave(*args):
         try:
             infoWindow.destroy()
         except:
-            showwarning(title=windowTitles,message ='Uno\nCatastrophic failure')
+            pass
 
     #the label of the last played card
     lastPlayed = tkinter.Label(turnWindow, text = f"{gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]}",borderwidth=2, relief="groove")
-    if gameData['playerDict'][gameData['playerList'][x]]['programSettings']['showColor']:
+    if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor']:
         if gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['wild']:
             lastPlayed.configure(bg = gameData['wildInfo']['chosenColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
         else:
@@ -646,7 +657,7 @@ def playerTurn():
     else:
         lastPlayed.configure(bg = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget'], fg =gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget'])
     lastPlayed.grid(column=1, row=1, ipadx=20, ipady=10, sticky="EW")
-    lastPlayed.bind('<Enter>',enter)
+    lastPlayed.bind('<Enter>',enterPrevious)
     lastPlayed.bind('<Leave>',leave)
 
 
@@ -674,31 +685,42 @@ def playerTurn():
     cardSelect.configure(state='readonly', textvariable=card_var, values =gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])
     cardSelect.grid(column=1, row=4, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
 
-    #info about the selected card combobox
-    dataCard= ttk.Combobox(turnWindow, state='readonly')
+    #info about the selected card
+    dataCard= tkinter.Label(turnWindow, text='Card Information',borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
     dataCard.grid(column=3, row=4, ipadx=20, ipady=10, sticky="EW")
-    #if you select a card, the info combobox will change
-    def cardData(*args):
-        listOfThings = list(gameData['cardInfo'][card_var.get()].keys())
-        listOfData = list()
-        for x in range(len(listOfThings)):
-            listOfData.append(f"{listOfThings[x]}: {gameData['cardInfo'][card_var.get()][listOfThings[x]]}")
-        dataCard.configure(values =listOfData)
-    card_var.trace('w', cardData)
+    dataCard.bind('<Enter>',enterSelected)
+    dataCard.bind('<Leave>',leave)
+    
+    def closeSettings():
+        SettingsWindow.destroy()
+        playerTurn()
 
 
     def settings():
-        
+        def changeSettings(*args):
+            global gameData
+            if cardColor_var.get() == 1:
+                gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor'] = True
+            else:
+                gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor'] = False
+        global SettingsWindow
+        turnWindow.destroy()
         SettingsWindow = tkinter.Tk()
-        ttk.Label(SettingsWindow,text="Settings",font=("Comic_Sans",10)).grid(column = 0,row = 1, ipadx=20, ipady=10, sticky="EW")
-        ttk.Label(SettingsWindow,text="show card color",font=("Comic_Sans",10)).grid(column = 1,row = 1, ipadx=20, ipady=10, sticky="EW")
-        tkinter.Checkbutton(SettingsWindow).grid(column = 2,row = 1, ipadx=20, ipady=10, sticky="EW")
+        tkinter.Label(SettingsWindow,text='Settings',borderwidth=2, relief="groove").grid(column = 0,row = 0, ipadx=20, ipady=10, sticky="EW",columnspan=4)
+        ttk.Label(SettingsWindow,text="show card color:",font=("Comic_Sans",10)).grid(column = 0,row = 1, ipadx=20, ipady=10, sticky="EW")
+        cardColor_var = tkinter.IntVar()
+        checkbutton_cardColor = tkinter.Checkbutton(SettingsWindow, variable=cardColor_var,onvalue = 1,offvalue = 0)
+        checkbutton_cardColor.grid(column = 2,row = 1, ipadx=20, ipady=10, sticky="EW")
+        if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor']:
+            cardColor_var.set(1)
+        cardColor_var.trace('w',changeSettings)
+        SettingsWindow.protocol("WM_DELETE_WINDOW", closeSettings)
         SettingsWindow.mainloop()
 
 
-    SettingsButton = ttk.Button(text="Settings",command=settings).grid(column = 3,row = 5, ipadx=20, ipady=10, sticky="EW")
+    ttk.Button(text="Settings",command=settings).grid(column = 3,row = 5, ipadx=20, ipady=10, sticky="EW")
 
-    playButton = ttk.Button(turnWindow, command =lambda: checkIfCardPlayable(card_var.get()), text='Play Selected Card').grid(column = 0,row = 5, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
+    ttk.Button(turnWindow, command =lambda: checkIfCardPlayable(card_var.get()), text='Play Selected Card').grid(column = 0,row = 5, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
     grabButton = ttk.Button(turnWindow,text='Grab card from pile',command=grabFromPile)
     grabButton.grid(column = 2,row = 5, ipadx=20, ipady=10, sticky="EW",columnspan= 1)
 
@@ -713,7 +735,7 @@ def betweenTruns():
         gameData['direction'] = '1'
     else:
         gameData['direction'] = '-1'
-    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human' or True:
+    if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
         playerTurn()
 
 
