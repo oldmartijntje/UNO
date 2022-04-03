@@ -8,6 +8,12 @@ import random
 from tkinter.messagebox import showerror, showinfo, showwarning
 import tkinter.messagebox
 
+def on_closing(windowTitles = '<3'):
+    global data, stopTheGame
+    if tkinter.messagebox.askokcancel(windowTitles, f"Your program will be terminated\nShould we proceed?", icon ='warning'):
+        data = accounts_omac.saveAccount(data, configSettings)
+        exit()
+
 stopTheGame = False
 
 #app data
@@ -22,7 +28,7 @@ random.seed(seed)
 print(seed)
 
 #account login
-configSettings = accounts_omac.configFileConsole()
+configSettings = accounts_omac.configFileTkinter()
 data = accounts_omac.defaultConfigurations.defaultLoadingTkinter(configSettings)
 if data == False:
     exit()
@@ -68,7 +74,6 @@ bots = 4
 players = 2
 cardsPerPlayer = 7
 whenReshuffle = 4
-chosenWildColor = 'Red'
 
 playerDict = {}
 playerList = []
@@ -234,12 +239,14 @@ def changedSomething(*args):
 
 def selectedPlayers(*args):
     global data_cardsList
+    global gameData
     global bots, players
     #amounts of times to import the carddeck
     totalAmount = playersAmountSelect_var.get() + botsAmountSelect_var.get()
     data_cardsList = [val for val in data_cardsList for _ in range((totalAmount + 10) // 10)]
     bots = botsAmountSelect_var.get()
     players = playersAmountSelect_var.get()
+    gameData['active'] = random.randint(0,playersAmountSelect_var.get() + botsAmountSelect_var.get()-1)
     playerSelectWindow.destroy()
 
     
@@ -256,11 +263,19 @@ playButton = ttk.Button(playerSelectWindow, text='Play', state='disabled', comma
 playButton.grid(column=0, row=2, ipadx=20, ipady=10,columnspan=2, sticky="EW")
 botsAmountSelect_var.trace('w', changedSomething)
 playersAmountSelect_var.trace('w', changedSomething)
+playerSelectWindow.protocol("WM_DELETE_WINDOW", on_closing)
 playerSelectWindow.mainloop()
 
 
 
 ######################## Game Setup ########################
+
+def on_closing_turnWindow(windowTitles = '<3'):
+    global data, stopTheGame
+    if tkinter.messagebox.askokcancel(windowTitles, f"Your program will be terminated\nShould we proceed?", icon ='warning'):
+        data = accounts_omac.saveAccount(data, configSettings)
+        turnWindow.destroy()
+        stopTheGame = True
 
 def createPlayer(botOrHuman, playerNumber, name = 'herman'):
     '''Creates a player or bot, depending on the input'''
@@ -368,12 +383,7 @@ def someoneWon():
 
 
 
-def on_closing():
-    global data, stopTheGame
-    if tkinter.messagebox.askokcancel(windowTitles, f"Your game will be terminated\nShould we proceed?", icon ='warning'):
-        data = accounts_omac.saveAccount(data, configSettings)
-        turnWindow.destroy()
-        stopTheGame = True
+
 
 #to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0
 def noIndexError(number, maxNumber, minNumber = 0):
@@ -465,7 +475,7 @@ def playCard(card):
         chooseColorButton = ttk.Button(wildWindow,state='disabled',text='Play', command=clickedButton)
         chooseColorButton.grid(row=1,column=0,columnspan=2,ipadx=20, ipady=10, sticky="EW")
         color_var.trace('w',chooseColor)
-        wildWindow.protocol("WM_DELETE_WINDOW", on_closing)
+        wildWindow.protocol("WM_DELETE_WINDOW", on_closing_turnWindow)
         wildWindow.mainloop()
 
     elif gameData['cardInfo'][card]['wild'] and gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Bot':
@@ -771,7 +781,7 @@ def playerTurn():
 
     
 
-    turnWindow.protocol("WM_DELETE_WINDOW", on_closing)
+    turnWindow.protocol("WM_DELETE_WINDOW", on_closing_turnWindow)
     turnWindow.mainloop()
 
 
@@ -862,7 +872,7 @@ def botTurn():
     if max(listOfMoves) != -1: 
         playCard(gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'][listOfMoves.index(max(listOfMoves))])
     else:
-        grabCard(gameData['active'])
+        grabCard(gameData['active'],False)
 
 
 

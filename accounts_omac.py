@@ -1,5 +1,11 @@
-version = '2.4.0'
+
+version = '2.5.0'
 #code made by OldMartijntje
+
+def on_closing(windowTitles = 'Accounts_omac_lib'):
+    import tkinter.messagebox
+    if tkinter.messagebox.askokcancel(windowTitles, f"Your program will be terminated\nShould we proceed?", icon ='warning'):
+        exit()
 
 def configFileConsole(pathLocation = False):
     '''creates or reads config file (consoleApp) 
@@ -17,7 +23,7 @@ def configFileConsole(pathLocation = False):
             config['DEFAULT'] = {'#don\'t change the file-extention if you are not sure of what it is' : None,
                 'fileExtention' : '_omac'}
             if pathLocation == False:
-                folder = input('do you have a specific folder where you want to store account data?\nimport the path, or not\n>')
+                folder = input('do you have a specific folder where you want to store accounts?\ntype the path, or not\n>')
             else: folder = 'accounts/'
             if os.path.isdir(folder):#check if the inputted folder exists
                 if folder[len(folder)-1] != '/' and folder[len(folder)-1] != '\\':
@@ -31,11 +37,80 @@ def configFileConsole(pathLocation = False):
                     pass
             config.write(configfile)
             print('we created systemConfig.ini, this contains configurations for the account system, change the [User] section at any time')
-    
-    fileExtention = config['DEFAULT']['fileExtention']
-    path = config['User']['SaveFileFolder']
-    autoLogin = config['User']['AutoLogin']
-    autoLoginName = config['User']['AccountName']
+    try:
+        fileExtention = config['DEFAULT']['fileExtention']
+        path = config['User']['SaveFileFolder']
+        autoLogin = config['User']['AutoLogin']
+        autoLoginName = config['User']['AccountName']
+    except:
+        delete = input('The configfile is not readable, either fix it or delete it.\nWe will close this program after you press enter. \nDo you want us to delete systemConfig.ini for you? (Y/N)\n>>')
+        if delete.lower() == 'y':
+            os.remove("systemConfig.ini")
+        exit()
+
+    autoLoginName = autoLoginName.replace(" ", "")
+    for character in string.punctuation:
+        autoLoginName = autoLoginName.replace(character, '')
+    if autoLoginName == '':
+        autoLogin = 'False'
+    return path, autoLogin, autoLoginName, fileExtention
+
+def configFileTkinter(pathLocation = False):
+    '''creates or reads config file (consoleApp) 
+    the argument is the path to where accounts are stored.
+    if False or not given, the program will ask for you'''
+    import configparser
+    import string
+    import tkinter
+    from tkinter import ttk
+    import os
+    if os.path.isfile("systemConfig.ini"):#read config if it exists
+        config = configparser.ConfigParser()
+        config.read('systemConfig.ini')
+    else:#create config
+        with open('systemConfig.ini', 'w') as configfile:
+            config = configparser.ConfigParser(allow_no_value=True)
+            config['DEFAULT'] = {'#don\'t change the file-extention if you are not sure of what it is' : None,
+                'fileExtention' : '_omac'}
+            def chosenPath(*args):
+                global folderr
+                window.destroy()
+                folderr = path_var.get()
+            if pathLocation == False:
+                window = tkinter.Tk()
+                ttk.Label(window,text='do you have a specific folder where you want to store accounts, then type it in here or not.\nIf you don\'t it will get recommended path for you').grid(column=0, row=0, ipadx=20, ipady=10, sticky="EW")
+                path_var = tkinter.StringVar()
+                path_entry = tkinter.Entry(window, textvariable= path_var)
+                path_entry.grid(column=0, row=1, ipadx=20, ipady=10, sticky="EW")
+                ttk.Button(window,text='Continue',command=chosenPath).grid(column=0, row=2, ipadx=20, ipady=10, sticky="EW")
+                window.protocol("WM_DELETE_WINDOW", on_closing)
+                window.mainloop()
+                folder = folderr
+
+
+            else: folder = 'accounts/'
+            if os.path.isdir(folder):#check if the inputted folder exists
+                if folder[len(folder)-1] != '/' and folder[len(folder)-1] != '\\':
+                    folder += '\\'
+                config['User'] = {'SaveFileFolder' : folder,'AutoLogin' : 'False', 'AccountName' : 'testaccount'}
+            else:
+                config['User'] = {'SaveFileFolder' : 'accounts/','AutoLogin' : 'False', 'AccountName' : 'testaccount'}
+                try:
+                    os.mkdir('accounts/')
+                except:
+                    pass
+            config.write(configfile)
+            print('we created systemConfig.ini, this contains configurations for the account system, change the [User] section at any time')
+    try:
+        fileExtention = config['DEFAULT']['fileExtention']
+        path = config['User']['SaveFileFolder']
+        autoLogin = config['User']['AutoLogin']
+        autoLoginName = config['User']['AccountName']
+    except:
+        import tkinter.messagebox
+        if tkinter.messagebox.askokcancel('Config Error!', 'There is a problem when we try to open your settings\nWe will close the program after you click this message away\n\nPress \'OK\' if you want us to delete the configfile (systemConfig.ini) for you,\notherwise you will have to fix it yourself', icon ='error'):
+            os.remove("systemConfig.ini")
+        exit()
     autoLoginName = autoLoginName.replace(" ", "")
     for character in string.punctuation:
         autoLoginName = autoLoginName.replace(character, '')
@@ -146,6 +221,7 @@ def askAccountNameTkinter(configSettings = ['accounts/', 'False', 'testaccount',
         nameEntry = tkinter.Entry(window,textvariable = nameVar, font=('calibre',10,'normal'))
         nameEntry.pack()
         button = tkinter.Button(window, text = buttonText, command = lambda: click()).pack()
+        window.protocol("WM_DELETE_WINDOW", on_closing)
         window.mainloop()
         username = removeCharacters(nameVar.get())
     return username
