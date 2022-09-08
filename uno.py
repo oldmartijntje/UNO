@@ -22,8 +22,8 @@ windowTitles = 'UNO'
 
 #create seed
 seed = accounts_omac.easy.stringToAscii(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
-if True:
-    seed = 4852474849475048505044324951585150585154
+#if True:
+#    seed = 4852474849475048505044324951585150585154
 random.seed(seed)
 print(seed)
 

@@ -131,7 +131,8 @@ if hostOrClient == 'Host':
 
     print(f'Listening for connections on {IP}:{PORT}...')
     def sendMessage(text,name, adress = 'NONE'):
-        global user,message
+        global user, message
+        message = {}
         #get length of custom message
         customMessageLenght = (str(len(f"{text}")))
         #if lengthe of number of lenght not long enough, add spaces
@@ -158,6 +159,7 @@ if hostOrClient == 'Host':
                     # Send user and message (both with their headers)
                     # We are reusing here message header sent by sender, and saved username header send by user when he connected
                     client_socket.send(user['header'] + user['data'] + message['header'] + message['data'])
+        print(f'server sent: {text}')
 
 
     # Handles message receiving
@@ -230,6 +232,12 @@ if hostOrClient == 'Host':
                     users[user['data'].decode('utf-8')] = str(client_socket)
                     if len(users) == 1 and admin == "NONE":
                         admin == user['data'].decode('utf-8')
+                        sendMessage(f'adminMenu//', f'{IP}:{PORT}', client_socket)
+                    elif admin == user['data'].decode('utf-8'):
+                        sendMessage(f'adminMenu//', f'{IP}:{PORT}', client_socket)
+                    else:
+                        sendMessage(f'waitForStart//', f'{IP}:{PORT}', client_socket)
+                        
                     print('Accepted new connection from {}:{}, username: {}'.format(*client_address, user['data'].decode('utf-8')))
                 elif users[user['data'].decode('utf-8')] == 'DISCONNECTED':
                     users[user['data'].decode('utf-8')] = str(client_socket)
@@ -294,7 +302,7 @@ if hostOrClient == 'Host':
                 print(f'Received message from {user["data"].decode("utf-8")}: {message["data"].decode("utf-8")}')
                 if len(message["data"].decode("utf-8").split('//')) == 2:
                     if message["data"].decode("utf-8").split('//')[0] == 'nickname':
-                        usernames[user["data"].decode("utf-8")] = message["data"].decode("utf-8").split('//')[1]
+                        usernames[message["data"].decode("utf-8").split('//')[1]] = user["data"].decode("utf-8")
                         print(usernames)
                 #define the pingcommand
                 pingCommand = False
@@ -376,10 +384,6 @@ if hostOrClient == 'Client':
         else:
             showerror(windowTitles,'IP not valid')
     def notConnectedAnymore(message):
-        try:
-            clientWindow.destroy()
-        except:
-            pass
         showerror(windowTitles,f'{message}')
         close()
 
@@ -397,13 +401,32 @@ if hostOrClient == 'Client':
         clientConnectWindow.mainloop()
     connectWindow()
     
-    def displayWaitingScreen(givenData):
+    def displayPlayerWaitingScreen(givenData):
+        global waitWindow
         #{'name':'','time':69}
+        try:
+            waitWindow.destroy()
+        except:
+            pass
         givenData = dict(givenData)
         waitWindow = tkinter.Tk()
         tkinter.Label(waitWindow,text=f'it\'s {givenData["name"]} their turn, They have {givenData["time"]} seconds to play their turn. \nplease wait').place()
+        waitWindow.protocol("WM_DELETE_WINDOW", on_closing)
 
+    def displayWaitingScreen():
+        global waitWindow
+        try:
+            waitWindow.destroy()
+        except:
+            pass
+        waitWindow = tkinter.Tk()
+        tkinter.Label(waitWindow,text=f'The game has not begun yet.\nplease wait').place()
+        waitWindow.protocol("WM_DELETE_WINDOW", on_closing)
 
+    def adminMenu():
+        global adminWindow
+        adminWindow = tkinter.Tk()
+        adminWindow.protocol("WM_DELETE_WINDOW", on_closing)
 
 
     #list
@@ -483,9 +506,13 @@ if hostOrClient == 'Client':
                     command = message.split('//')
                     if len(command) > 0:
                         if command[0] == 'wait':
-                            displayWaitingScreen(command[1])
-                        if command[0] == 'adminMenu':
+                            displayPlayerWaitingScreen(command[1])
+                        elif command[0] == 'adminMenu':
+                            adminMenu()
+                        elif command[0] == 'gameData':
                             pass
+                        elif command[0] == 'waitForStart':
+                            displayWaitingScreen()
 
 
                 
@@ -517,16 +544,12 @@ if hostOrClient == 'Client':
     
     
     
-    clientWindow = tkinter.Tk()
-    
-    
-    def tick():
+    while True:
         receive()
-        clientWindow.after(10, tick)
-
-
-    clientWindow.after(10, tick)
-    clientWindow.mainloop()
+    
+    
+    
+    
 
     
 
