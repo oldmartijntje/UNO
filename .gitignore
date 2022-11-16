@@ -8,6 +8,7 @@ newGithubUpdater.bat
 Config.ini
 systemConfig.ini
 my_saves/
+secrets.json
 
 # C extensions
 *.so
