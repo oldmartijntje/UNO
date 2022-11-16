@@ -2,11 +2,8 @@ from datetime import datetime
 import os
 import json
 import accounts_omac
-import tkinter
-from tkinter import ttk
 import random
 from tkinter.messagebox import showerror, showinfo, showwarning
-import tkinter.messagebox
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -21,12 +18,6 @@ async def on_ready():
         print(f"Synched {len(synced)} command(s)")
     except Exception as e:
         print(e)
-
-async def on_closing(windowTitles = '<3'):
-    global data, stopTheGame
-    if tkinter.messagebox.askokcancel(windowTitles, f"Your program will be terminated\nShould we proceed?", icon ='warning'):
-        data = accounts_omac.saveAccount(data, configSettings)
-        exit()
 
 stopTheGame = False
 
@@ -117,54 +108,16 @@ else:
 ######################## Player Select Menu ########################
 
 
-
-playerSelectWindow = tkinter.Tk()
-
-async def changedSomething(*args):
-    if playersAmountSelect_var.get() + botsAmountSelect_var.get() > 1:
-        playButton.configure(state='normal')
-    else:
-        playButton.configure(state='disabled')
-
 async def selectedPlayers(*args):
     global data_cardsList
     global gameData
     global bots, players
     #amounts of times to import the carddeck
-    totalAmount = playersAmountSelect_var.get() + botsAmountSelect_var.get()
+    totalAmount = bots + players
     data_cardsList = [val for val in data_cardsList for _ in range((totalAmount + 10) // 10)]
-    bots = botsAmountSelect_var.get()
-    players = playersAmountSelect_var.get()
-    gameData['active'] = random.randint(0,playersAmountSelect_var.get() + botsAmountSelect_var.get()-1)
-    playerSelectWindow.destroy()
-
-    
-
-
-
-playersAmountSelect_var = tkinter.IntVar()
-botsAmountSelect_var = tkinter.IntVar()
-spinboxPlayers = ttk.Spinbox(playerSelectWindow, from_=float("0"), to=float("inf"), textvariable=playersAmountSelect_var).grid(column=1, row=0, ipadx=20, ipady=10)
-spinboxBots = ttk.Spinbox(playerSelectWindow, from_=float("0"), to=float("inf"), textvariable=botsAmountSelect_var).grid(column=1, row=1, ipadx=20, ipady=10)
-playerLabelSpinbox = tkinter.Label(playerSelectWindow, text = 'amount of players:').grid(column=0, row=0, ipadx=20, ipady=10)
-botLabelSpinbox = tkinter.Label(playerSelectWindow, text = 'amount of bots:').grid(column=0, row=1, ipadx=20, ipady=10)
-playButton = ttk.Button(playerSelectWindow, text='Play', state='disabled', command=selectedPlayers)
-playButton.grid(column=0, row=2, ipadx=20, ipady=10,columnspan=2, sticky="EW")
-botsAmountSelect_var.trace('w', changedSomething)
-playersAmountSelect_var.trace('w', changedSomething)
-playerSelectWindow.protocol("WM_DELETE_WINDOW", on_closing)
-playerSelectWindow.mainloop()
-
-
+    gameData['active'] = random.randint(0,players + bots-1)
 
 ######################## Game Setup ########################
-
-async def on_closing_turnWindow(windowTitles = '<3'):
-    global data, stopTheGame
-    if tkinter.messagebox.askokcancel(windowTitles, f"Your program will be terminated\nShould we proceed?", icon ='warning'):
-        data = accounts_omac.saveAccount(data, configSettings)
-        turnWindow.destroy()
-        stopTheGame = True
 
 async def createPlayer(botOrHuman, playerNumber, name = 'herman'):
     '''Creates a player or bot, depending on the input'''
@@ -328,24 +281,8 @@ async def playCard(card):
             gameData['direction'] = '0'
 
     if gameData['cardInfo'][card]['wild'] and gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
-        def clickedButton(*args):
-            global gameData
-            gameData['wildInfo']['chosenColor'] = color_var.get()
-            gameData['wildInfo']['played'] = True
-            wildWindow.destroy()
-        def chooseColor(*args):
-            chooseColorButton.configure(state='enabled')
-        wildWindow = tkinter.Tk()
-        tkinter.Label(wildWindow, text = 'choose a color:').grid(row=0,column=0,ipadx=20, ipady=10, sticky="EW")
-        color_var = tkinter.StringVar()
-        colorComboBox =ttk.Combobox(wildWindow,state='readonly',values = gameData['wildInfo']['colors'])
-        colorComboBox.configure(textvariable=color_var)
-        colorComboBox.grid(row=0,column=1,ipadx=20, ipady=10, sticky="EW")
-        chooseColorButton = ttk.Button(wildWindow,state='disabled',text='Play', command=clickedButton)
-        chooseColorButton.grid(row=1,column=0,columnspan=2,ipadx=20, ipady=10, sticky="EW")
-        color_var.trace('w',chooseColor)
-        wildWindow.protocol("WM_DELETE_WINDOW", on_closing_turnWindow)
-        wildWindow.mainloop()
+        pass
+
 
     elif gameData['cardInfo'][card]['wild'] and gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Bot':
         activePlayer = gameData['active']
@@ -517,136 +454,11 @@ async def playerTurn():
     global nameAndCardList, nameList
     activePlayer = gameData['active']
 
-    #create window
-    turnWindow = tkinter.Tk()
-
-    #easy accessable items
-    defaultBG = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget']
-    defaultFG = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultFGwidget']
-    defaultBGwindow = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwindow']
-
-    #change the window
-    turnWindow.configure(bg=defaultBGwindow)
-
     #the combobox with player order
     generateNameList()
-
-    #labels
-    nameLabel = tkinter.Label(turnWindow, text =f"Current player: {gameData['playerDict'][gameData['playerList'][activePlayer]]['number']}.{gameData['playerDict'][gameData['playerList'][gameData['active']]]['name']}",borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
-    nameLabel.grid(column=0, row=0, ipadx=20, ipady=10, sticky="EW", columnspan= 2)
-    tkinter.Label(turnWindow,text='PlayerOrder:',bg = defaultBGwindow, fg =defaultFG).grid(column=2, row=0, ipadx=20, ipady=10, sticky="EW")
-    tkinter.Label(turnWindow,text='Last played card:', bg = defaultBGwindow, fg =defaultFG).grid(column=0, row=1, ipadx=20, ipady=10, sticky="EW")
-    tkinter.Label(turnWindow, text='By:', bg =defaultBGwindow, fg=defaultFG).grid(column=2, row=1, ipadx=20, ipady=10, sticky="EW")
-    tkinter.Label(turnWindow, bg = defaultBGwindow).grid(column=0, row=2, ipadx=20, ipady=10, sticky="EW",columnspan= 4)
-    tkinter.Label(turnWindow,text = 'Select card to play:', bg =defaultBGwindow, fg= defaultFG).grid(column=0, row=4, ipadx=20, ipady=10, sticky="EW")  
-
-    #what happends when you touch the label with the last played card
-    def entering(cardToShow):
-        global infoWindow
-        try:
-            infoWindow = tkinter.Tk()
-            infoWindow.geometry(f'+{infoWindow.winfo_pointerx()-infoWindow.winfo_rootx()+2}+{infoWindow.winfo_pointery()-infoWindow.winfo_rooty()+2}')
-            infoLabel = ttk.Label(infoWindow)
-            infoLabel.configure(text=generateCardTip(cardToShow))
-            infoLabel.pack(ipadx=20, ipady=10)
-        except Exception as e:
-            showwarning(title=windowTitles,message =f'Uno\nCatastrophic failure')
-
-    def enterPrevious(*args):
-        entering(gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1])
-
-    def enterSelected(*args):
-        if card_var.get() != '':
-            entering(card_var.get())
-    #close the card info
-    def leave(*args):
-        try:
-            infoWindow.destroy()
-        except:
-            pass
-
-    #the label of the last played card
-    lastPlayed = tkinter.Label(turnWindow, text = f"{gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]}",borderwidth=2, relief="groove")
-    if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor']:
-        if gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['wild']:
-            lastPlayed.configure(bg = gameData['wildInfo']['chosenColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
-        else:
-            lastPlayed.configure(bg = gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayBGColor'], fg =gameData['cardInfo'][gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]]['displayFGColor'])
-    else:
-        lastPlayed.configure(bg = gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['defaultBGwidget'], fg =gameData['playerDict'][gameData['playerList'][x]]['programSettings']['defaultFGwidget'])
-    lastPlayed.grid(column=1, row=1, ipadx=20, ipady=10, sticky="EW")
-    lastPlayed.bind('<Enter>',enterPrevious)
-    lastPlayed.bind('<Leave>',leave)
-
-
-    #show who played the last card
-    playerPlayed = tkinter.Label(turnWindow,borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
-    playerPlayed.grid(column=3, row=1, ipadx=20, ipady=10, sticky="EW")
-    if gameData['playerHistory'][len(gameData['playerHistory'])-1] == "NONE":
-        playerPlayed.configure(text = 'Nobody, it\'s the first card')
-    else:
-        playerPlayed.configure(text =f"{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['number']}.{gameData['playerDict'][gameData['playerHistory'][len(gameData['playerHistory'])-1]]['name']}")
-
-    #the combobox of the players
-    nextPlayer_var = tkinter.StringVar(value=f'Next player: {nameList[0]}')
-    playerOrderCombobox = ttk.Combobox(turnWindow,state='readonly',values = nameAndCardList, textvariable=nextPlayer_var)
-    nextPlayer_var.trace('w',lambda *args: nextPlayer_var.set(f'Next player: {nameList[0]}'))
-    playerOrderCombobox.grid(column=3, row=0, ipadx=20, ipady=10, sticky="EW")
-    
-    
-    #your cards in combobox or spinbox
-    card_var = tkinter.StringVar()
-    if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['typeOfSelect'] == 'default':
-        cardSelect = ttk.Combobox(turnWindow)
-    else:
-        cardSelect = ttk.Spinbox(turnWindow)
-    cardSelect.configure(state='readonly', textvariable=card_var, values =gameData['playerDict'][gameData['playerList'][activePlayer]]['cards'])
-    cardSelect.grid(column=1, row=4, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
-
-    #info about the selected card
-    dataCard= tkinter.Label(turnWindow, text='Card Information',borderwidth=2, relief="groove", fg = defaultFG, bg =defaultBG)
-    dataCard.grid(column=3, row=4, ipadx=20, ipady=10, sticky="EW")
-    dataCard.bind('<Enter>',enterSelected)
-    dataCard.bind('<Leave>',leave)
     
     def closeSettings():
-        SettingsWindow.destroy()
         playerTurn()
-
-
-    def settings():
-        def changeSettings(*args):
-            global gameData
-            if cardColor_var.get() == 1:
-                gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor'] = True
-            else:
-                gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor'] = False
-        global SettingsWindow
-        turnWindow.destroy()
-        SettingsWindow = tkinter.Tk()
-        tkinter.Label(SettingsWindow,text='Settings',borderwidth=2, relief="groove").grid(column = 0,row = 0, ipadx=20, ipady=10, sticky="EW",columnspan=4)
-        ttk.Label(SettingsWindow,text="show card color:",font=("Comic_Sans",10)).grid(column = 0,row = 1, ipadx=20, ipady=10, sticky="EW")
-        cardColor_var = tkinter.IntVar()
-        checkbutton_cardColor = tkinter.Checkbutton(SettingsWindow, variable=cardColor_var,onvalue = 1,offvalue = 0)
-        checkbutton_cardColor.grid(column = 2,row = 1, ipadx=20, ipady=10, sticky="EW")
-        if gameData['playerDict'][gameData['playerList'][activePlayer]]['programSettings']['showColor']:
-            cardColor_var.set(1)
-        cardColor_var.trace('w',changeSettings)
-        SettingsWindow.protocol("WM_DELETE_WINDOW", closeSettings)
-        SettingsWindow.mainloop()
-
-
-    ttk.Button(text="Settings",command=settings).grid(column = 3,row = 5, ipadx=20, ipady=10, sticky="EW")
-
-    ttk.Button(turnWindow, command =lambda: checkIfCardPlayable(card_var.get()), text='Play Selected Card').grid(column = 0,row = 5, ipadx=20, ipady=10, sticky="EW",columnspan= 2)
-    grabButton = ttk.Button(turnWindow,text='Grab card from pile',command=grabFromPile)
-    grabButton.grid(column = 2,row = 5, ipadx=20, ipady=10, sticky="EW",columnspan= 1)
-
-    
-
-    turnWindow.protocol("WM_DELETE_WINDOW", on_closing_turnWindow)
-    turnWindow.mainloop()
-
 
 async def botTurn():
     global gameData
