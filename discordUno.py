@@ -8,6 +8,18 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
+botKey = ''
+if os.path.exists(f'secrets.json'):
+    with open(f'secrets.json') as level_json_file:
+        botKey = json.load(level_json_file)
+        if type(botKey) != dict and type(botKey) != list:
+            botKey = json.loads(botKey)
+        botKey = botKey["BotToken"]
+else:
+    with open(f'secrets.json', 'w') as outfile:
+        json.dump({"BotToken": ""}, outfile, indent=4)
+    raise ImportError("No \"Bot Token\" provided! Add your \"Bot Token\" to the \"secrets.json\"")
+
 bot = commands.Bot(command_prefix="uno!", intents = discord.Intents.all())
 
 @bot.event
@@ -45,7 +57,7 @@ if appIDorName not in data['collectables']:
 if appIDorName not in data['achievements']:
     data['achievements'][appIDorName] = {}
 
-async def accountDataUpdate(thing):
+def accountDataUpdate(thing):
     global data
     if thing not in data['appData'][appIDorName]:
         data['appData'][appIDorName][thing] = 1
@@ -63,7 +75,7 @@ working VEWY HAWD to fix this!'''
 
 
 bots = 4
-players = 2
+players = 0
 cardsPerPlayer = 7
 whenReshuffle = 4
 
@@ -108,7 +120,7 @@ else:
 ######################## Player Select Menu ########################
 
 
-async def selectedPlayers(*args):
+def selectedPlayers(*args):
     global data_cardsList
     global gameData
     global bots, players
@@ -119,7 +131,7 @@ async def selectedPlayers(*args):
 
 ######################## Game Setup ########################
 
-async def createPlayer(botOrHuman, playerNumber, name = 'herman'):
+def createPlayer(botOrHuman, playerNumber, name = 'herman'):
     '''Creates a player or bot, depending on the input'''
     global gameData
     gameData['playerDict'][f'player {playerNumber}'] = {'type': botOrHuman,
@@ -151,7 +163,7 @@ gameData['wildInfo']['colors'] = colorsInJson
 #would you want to play with a unshuffled deck of cards, me neither.
 random.shuffle(gameData['grabCardsDeck'])
 
-async def grabCard(activePlayer, achievement = True):
+def grabCard(activePlayer, achievement = True):
     global gameData
     if len(gameData['grabCardsDeck']) <= whenReshuffle:
         if len(gameData['playedCardsDeck']) == 1:
@@ -169,7 +181,7 @@ async def grabCard(activePlayer, achievement = True):
 
 
 #give players cards
-async def giveDeckOfCards(achievements = True):
+def giveDeckOfCards(achievements = True):
     global gameData
     for i in range(len(gameData['playerList'])):
         for _ in range(cardsPerPlayer):
@@ -193,7 +205,7 @@ giveDeckOfCards(False)
 
 ######################## Turns of players / bots ########################
 
-async def someoneWon():
+def someoneWon():
     global gameData
     gameData['statistics']['winOrder'].append(gameData['playerList'][gameData['active']])
     gameData['playerList'].pop(gameData['active'])
@@ -208,7 +220,7 @@ async def someoneWon():
 
 
 #to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0
-async def noIndexError(number, maxNumber, minNumber = 0):
+def noIndexError(number, maxNumber, minNumber = 0):
     '''to not get those nasty index out of range errors, you try to get item 20 out of 19 items, this will return you item 0'''
     while number > maxNumber or number < minNumber:
         if number > maxNumber:
@@ -217,7 +229,7 @@ async def noIndexError(number, maxNumber, minNumber = 0):
             number += maxNumber + 1
     return number
 
-async def generateNameList():
+def generateNameList():
     global nameAndCardList, nameList
     activePlayer = gameData['active']
     nameAndCardList = list()
@@ -232,9 +244,8 @@ async def generateNameList():
 
 
 #play a card
-async def playCard(card):
+def playCard(card):
     global gameData
-    global wildWindow
     global nameAndCardList
     if gameData['plusCardActive'] > 0 and gameData['cardInfo'][card]['plus'] == 0:
         for _ in range(gameData['plusCardActive']):
@@ -242,12 +253,10 @@ async def playCard(card):
         if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
             showinfo(title=windowTitles,message =f'You grabbed {gameData["plusCardActive"]} cards, since the last card was a + card.\nSelect again which card you want to play')
             generateNameList()
-            cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
-            playerOrderCombobox.configure(value=nameAndCardList)
         gameData['plusCardActive'] = 0
         return
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
-        turnWindow.destroy()
+        pass
     gameData['playerHistory'].append(gameData['playerList'][gameData['active']])
     if gameData['cardInfo'][card]['suckDragon']:
         gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'].remove(card)    
@@ -322,7 +331,7 @@ async def playCard(card):
 
 
 #is it playable tho??
-async def checkIfCardPlayable(selected,mode = True):
+def checkIfCardPlayable(selected,mode = True):
     if selected != '':
         if gameData['cardInfo'][selected]['alwaysPlayable']:
             if mode == False:
@@ -362,7 +371,7 @@ async def checkIfCardPlayable(selected,mode = True):
             data['appData'][appIDorName]['pickACardError'] += 1
 
 #who is the next player if you play this car
-async def nextPlayer(card = 'NONE'):
+def nextPlayer(card = 'NONE'):
     if card == 'NONE':
         direction = str(gameData['direction'])
         return noIndexError(gameData['active'] + int(direction), len(gameData['playerList'])-1)
@@ -385,7 +394,7 @@ async def nextPlayer(card = 'NONE'):
 
 
 #show what the card does
-async def generateCardTip(card):
+def generateCardTip(card):
     text = f"Card color: {gameData['cardInfo'][card]['color']}\nCard type: {gameData['cardInfo'][card]['type']}\n"
     if checkIfCardPlayable(card,False):
         text += 'This card is playable at this moment'
@@ -426,7 +435,7 @@ async def generateCardTip(card):
 
     return text
 
-async def grabFromPile(*args):
+def grabFromPile(*args):
  
     if gameData['plusCardActive'] > 0:
         for _ in range(gameData['plusCardActive']):
@@ -434,33 +443,26 @@ async def grabFromPile(*args):
         showinfo(title=windowTitles,message =f'You grabbed {gameData["plusCardActive"]} cards, since the last card was a + card.\nSelect again which card you want to play')
         gameData['plusCardActive'] = 0
         generateNameList()
-        cardSelect.configure(values =gameData['playerDict'][gameData['playerList'][gameData['active']]]['cards'])
-        playerOrderCombobox.configure(value=nameAndCardList)
         return
     else:
         grabCard(gameData['active'])
     if gameData['playerDict'][gameData['playerList'][gameData['active']]]['type'] == 'Human':
-        turnWindow.destroy()
+        pass
 
 
 
 ######################## player turn ########################
 
-async def playerTurn():
-    global cardSelect
-    global turnWindow
+def playerTurn():
     global gameData
-    global playerOrderCombobox
     global nameAndCardList, nameList
     activePlayer = gameData['active']
 
     #the combobox with player order
     generateNameList()
     
-    def closeSettings():
-        playerTurn()
 
-async def botTurn():
+def botTurn():
     global gameData
     
     lastPlayed = gameData['playedCardsDeck'][len(gameData['playedCardsDeck'])-1]
@@ -552,7 +554,7 @@ async def botTurn():
 
 
 
-async def betweenTruns():
+def betweenTruns():
     gameData['active'] = noIndexError(gameData['active'] + int(gameData['direction']), len(gameData['playerList'])-1)
     if int(gameData['direction']) > 0:
         gameData['direction'] = '1'
@@ -579,3 +581,5 @@ for x in range(len(gameData['statistics']['winOrder'])):
 for y in range(len(gameData['playerList'])):
     endingResultText+= f"Not finished: {gameData['playerDict'][gameData['playerList'][y]]['number']}.{gameData['playerDict'][gameData['playerList'][y]]['name']}\n"
 showinfo(title=windowTitles,message =f'{endingResultText}')
+
+bot.run(token=botKey)
