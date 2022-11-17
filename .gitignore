@@ -10,6 +10,8 @@ systemConfig.ini
 my_saves/
 secrets.json
 botData.json
+kladblok.py
+logFiles/
 
 # C extensions
 *.so

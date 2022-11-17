@@ -7,6 +7,53 @@ from tkinter.messagebox import showerror, showinfo, showwarning
 import discord
 from discord import app_commands
 from discord.ext import commands
+from discord.ui import Button, View
+
+# logging types:
+# deleteAfter
+#
+# none
+# all
+#
+# error
+# modify
+# warning
+# debug
+# info
+# needed
+# stalk
+
+logType = ["all"]
+logFile = 'logFiles/'
+if not os.path.isdir(logFile):
+    os.mkdir(logFile)
+logFile = f"{logFile}/log{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.log"
+logF = open(logFile, "w")
+logF.close()
+
+def logging(itemToLog: str = '', type = '', special = ''):
+    if logFile != '':
+        time = datetime.now().strftime(('%d/%m/%Y-%H:%M:%S'))
+        message = f"[{time}] [{type.upper()}] {itemToLog}"
+        logF = open(f'{logFile}', "a+")
+        logF.write(f'{special}{message}\n')
+        logF.close() 
+        print(f'{message}')
+
+def log(logMessage: str = '', typeOfLog: str = 'info'):
+    if logMessage != '' and "none" not in logType:
+        if typeOfLog == 'info' and 'all' in logType:
+            logging(logMessage, typeOfLog)
+        elif typeOfLog == 'warning' and ('all' in logType or 'warning' in logType):
+            logging(logMessage, typeOfLog, '>')
+        elif typeOfLog == 'error' and ('all' in logType or 'error' in logType):
+            logging(logMessage, typeOfLog, '>')
+        elif typeOfLog == 'modify' and ('all' in logType or 'modify' in logType):
+            logging(logMessage, typeOfLog)
+        elif typeOfLog in logType or 'all' in logType:
+            logging(logMessage, typeOfLog)
+        elif typeOfLog == 'needed':
+            logging(logMessage, typeOfLog)
 
 userDict = {}
 gamesDict = {}
@@ -28,15 +75,16 @@ bot = commands.Bot(command_prefix="uno!", intents = discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    print("bot is Up and Ready!")
+    log("bot is Up and Ready!")
     try:
         synced = await bot.tree.sync()
-        print(f"Synched {len(synced)} command(s)")
+        log(f"Synched {len(synced)} command(s)")
     except Exception as e:
-        print(e)
+        log(e, 'error')
 
-@bot.tree.command(name="starserver")
-async def starServer(interaction: discord.Interaction, pincode: int = 0):
+@bot.tree.command(name="make_server")
+async def make_server(interaction: discord.Interaction, pincode: int = 0):
+    log(f"{interaction.user.mention} tries to make a server with pincode: {pincode}", "stalk")
     if createServer(interaction, pincode):
         if pincode == 0:
             await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nNo Pincode", ephemeral=False)
@@ -48,6 +96,7 @@ async def starServer(interaction: discord.Interaction, pincode: int = 0):
 @bot.tree.command(name="list_servers")
 async def list_Servers(interaction: discord.Interaction):
     if interaction.user.mention in secretsDict["authorizedUsers"]:
+        log(f"{interaction.user.mention} was allowed to list all the servers")
         message = '=====Listed Servers=====\n'
         for server in list(gamesDict.keys()):
             if gamesDict[server]['passcode'] == 0:
@@ -57,26 +106,63 @@ async def list_Servers(interaction: discord.Interaction):
         message = f"{message}"
         await interaction.response.send_message(f"{message}", ephemeral=False)
     else:
+        log(f"{interaction.user.mention} is not allowed to list all the servers")
         await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
 
 @bot.tree.command(name="stop")
 async def stop(interaction: discord.Interaction):
     if interaction.user.mention in secretsDict["authorizedUsers"]:
+        log(f"{interaction.user.mention} was allowed to stop the bot")
         if saveFile("botData", {"gamesDict": gamesDict, "userDict": userDict, "serverIdNumber": serverIdNumber}):
             await interaction.response.send_message(f"Oki Doki! Bai Bai!", ephemeral=False)
             exit()
         else:
             await interaction.response.send_message(f"Hmm yeah that didn't go as planned", ephemeral=False)
     else:
+        log(f"{interaction.user.mention} is not allowed to stop the bot")
         await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
 
 @bot.tree.command(name="ping")
 async def ping(interaction: discord.Interaction):
+    log(f"{interaction.user.mention} likes to play pingpong", "stalk")
     await interaction.response.send_message(f"Pong!", ephemeral=False)
 
 @bot.tree.command(name="my_uid")
 async def my_uid(interaction: discord.Interaction):
+    log(f"{interaction.user.mention} requested his own ID", "stalk")
     await interaction.response.send_message(f"Your user ID: <{interaction.user.mention.split('@')[1]}", ephemeral=False)
+
+@bot.tree.command(name="help")
+async def help(interaction: discord.Interaction):
+    log(f"{interaction.user.mention} needed help with the commands", "stalk")
+    embed1=discord.Embed(title="Basic commands:", description="You're welcome :)", color=0x15bcf4)
+    embed1.add_field(name="/make_server", value="It makes a server", inline=True)
+    embed1.add_field(name="/ping", value="see if the bot works", inline=True)
+    embed1.add_field(name="/my_uid", value="get your user ID", inline=True)
+    embed1.add_field(name="/help", value="get this box", inline=True)
+    button1 = Button(label="MORE!", style=discord.ButtonStyle.green)
+    button2 = Button(label="I wanna go bacc :c", style=discord.ButtonStyle.blurple)
+    embed2=discord.Embed(title="Admin commands:", description="U greedy basterd", color=0x15bcf4)
+    embed2.add_field(name="/list_servers", value="List the servers", inline=True)
+    embed2.add_field(name="/stop", value="stop the bot", inline=True)
+    embed2.set_footer(text="Now happy?")
+
+    view1 = View()
+    view2 = View()
+    view1.add_item(button1)
+    view2.add_item(button2)
+
+    async def button_callback2(interaction):
+        log(f"{interaction.user.mention} navigated back to the first help page", "stalk")
+        await interaction.response.send_message("You asked for help, so here i am!",embed=embed1, view=view1)
+    async def button_callback1(interaction):
+        log(f"{interaction.user.mention} navigated to the second help page", "stalk")
+        await interaction.response.send_message("You asked for help, so here i am!",embed=embed2, view=view2)
+    button1.callback = button_callback1
+    button2.callback = button_callback2
+
+    await interaction.response.send_message("You asked for help, so here i am!",embed=embed1, view=view1)
+
     
 
 def stringToAscii(seedString:str): #turns everything into ther ASCII value
@@ -88,6 +174,7 @@ def stringToAscii(seedString:str): #turns everything into ther ASCII value
     return seed
 
 def saveFile(file, data):
+    log(f"{file}.json has been saved", "modify")
     with open(f'{file}.json', 'w') as outfile:
         json.dump(data, outfile, indent=4)
     return True
@@ -102,6 +189,7 @@ def createServer(data: str = '', pincode: int = 0):
         userDict[data.user.mention]["server"] = f"{serverId}"
     else:
         userDict[data.user.mention] = {"server":f"{serverId}"}
+    log(f"{data.user.mention} is now linked to a server: {serverId}", "debug")
     return True
 
 stopTheGame = False
