@@ -23,6 +23,7 @@ from discord.ui import Button, View
 # needed
 # stalk
 
+logInTerminal = True
 logType = ["all"]
 logFile = 'logFiles/'
 if not os.path.isdir(logFile):
@@ -38,7 +39,8 @@ def logging(itemToLog: str = '', type = '', special = ''):
         logF = open(f'{logFile}', "a+")
         logF.write(f'{special}{message}\n')
         logF.close() 
-        print(f'{message}')
+        if logInTerminal:
+            print(f'{message}')
 
 def log(logMessage: str = '', typeOfLog: str = 'info'):
     if logMessage != '' and "none" not in logType:
@@ -81,6 +83,15 @@ async def on_ready():
         log(f"Synched {len(synced)} command(s)")
     except Exception as e:
         log(e, 'error')
+    log("-----------------------------------------------")
+    log(f"Bot logged in as: {bot.user}")
+    log(f"Bot ID: {bot.user.id}")
+    log(f"Version of Discord.py: {discord.__version__}")
+    log(f"Servers: {len(bot.guilds)}")
+    log("    Name: ID")
+    for server in bot.guilds:
+        log(f"    {server.name}: {server.id}")
+    log("-----------------------------------------------")
 
 @bot.tree.command(name="make_server")
 async def make_server(interaction: discord.Interaction, pincode: int = 0):
