@@ -8,16 +8,20 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-botKey = ''
+userDict = {}
+gamesDict = {}
+serverIdNumber = 1111111
+
+secretsDict = {}
 if os.path.exists(f'secrets.json'):
     with open(f'secrets.json') as level_json_file:
         botKey = json.load(level_json_file)
         if type(botKey) != dict and type(botKey) != list:
             botKey = json.loads(botKey)
-        botKey = botKey["BotToken"]
+        secretsDict = botKey
 else:
     with open(f'secrets.json', 'w') as outfile:
-        json.dump({"BotToken": ""}, outfile, indent=4)
+        json.dump({"BotToken": "", "authorizedUsers": []}, outfile, indent=4)
     raise ImportError("No \"Bot Token\" provided! Add your \"Bot Token\" to the \"secrets.json\"")
 
 bot = commands.Bot(command_prefix="uno!", intents = discord.Intents.all())
@@ -30,6 +34,75 @@ async def on_ready():
         print(f"Synched {len(synced)} command(s)")
     except Exception as e:
         print(e)
+
+@bot.tree.command(name="starserver")
+async def starServer(interaction: discord.Interaction, pincode: int = 0):
+    if createServer(interaction, pincode):
+        if pincode == 0:
+            await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nNo Pincode", ephemeral=False)
+        else:
+            await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nPincode: {gamesDict[userDict[interaction.user.mention]['server']]['passcode']}", ephemeral=False)
+    else:
+        await interaction.response.send_message(f"An error accured, please try again.", ephemeral=False)
+
+@bot.tree.command(name="list_servers")
+async def list_Servers(interaction: discord.Interaction):
+    if interaction.user.mention in secretsDict["authorizedUsers"]:
+        message = '=====Listed Servers=====\n'
+        for server in list(gamesDict.keys()):
+            if gamesDict[server]['passcode'] == 0:
+                message = f"{message}Server ID: {server}\nHost: {gamesDict[server]['host']}\n=====YEET=====\n"
+            else:
+                message = f"{message}Server ID: {server}\nPicode: {gamesDict[server]['passcode']}\nHost: {gamesDict[server]['host']}\n=====YEET=====\n"
+        message = f"{message}"
+        await interaction.response.send_message(f"{message}", ephemeral=False)
+    else:
+        await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
+
+@bot.tree.command(name="stop")
+async def stop(interaction: discord.Interaction):
+    if interaction.user.mention in secretsDict["authorizedUsers"]:
+        if saveFile("botData", {"gamesDict": gamesDict, "userDict": userDict, "serverIdNumber": serverIdNumber}):
+            await interaction.response.send_message(f"Oki Doki! Bai Bai!", ephemeral=False)
+            exit()
+        else:
+            await interaction.response.send_message(f"Hmm yeah that didn't go as planned", ephemeral=False)
+    else:
+        await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
+
+@bot.tree.command(name="ping")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Pong!", ephemeral=False)
+
+@bot.tree.command(name="my_uid")
+async def my_uid(interaction: discord.Interaction):
+    await interaction.response.send_message(f"Your user ID: <{interaction.user.mention.split('@')[1]}", ephemeral=False)
+    
+
+def stringToAscii(seedString:str): #turns everything into ther ASCII value
+    seedList = []
+    for x in seedString:
+        seedList.append(ord(x))#change every character into its ASCII value
+    seedString = ''.join([str(elem) for elem in seedList])#add list together into string
+    seed = int(seedString)
+    return seed
+
+def saveFile(file, data):
+    with open(f'{file}.json', 'w') as outfile:
+        json.dump(data, outfile, indent=4)
+    return True
+
+def createServer(data: str = '', pincode: int = 0):
+    global userDict, gamesDict, serverIdNumber
+    while f"{serverIdNumber}" in gamesDict:
+        serverIdNumber += 1
+    serverId = f"{serverIdNumber}"
+    gamesDict[f"{serverId}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+    if data.user.mention in userDict and "server" in userDict[data.user.mention]:
+        userDict[data.user.mention]["server"] = f"{serverId}"
+    else:
+        userDict[data.user.mention] = {"server":f"{serverId}"}
+    return True
 
 stopTheGame = False
 
@@ -94,9 +167,6 @@ gameData = {'playerDict': playerDict,
             'wildInfo': {'played': False, 'chosenColor': 'blue', 'colors': []},
             'statistics': {'winOrder':[]}}
 
-#without it there wouldn't be a folder to put the jsons in
-accounts_omac.easy.createPathIfNotThere('gameData/')
-
 
 ######################## Read if JSON Exists ########################
 
@@ -118,7 +188,6 @@ else:
 
 
 ######################## Player Select Menu ########################
-
 
 def selectedPlayers(*args):
     global data_cardsList
@@ -566,20 +635,20 @@ def betweenTruns():
         botTurn()
 
 
-while len(gameData['playerList']) > 1 and not stopTheGame:
-    betweenTruns()
-endingResultText = ''
-for x in range(len(gameData['statistics']['winOrder'])):
-    if x == 0:
-        endingResultText += f"Winner: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
-    elif x == 1:
-        endingResultText += f"Second place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
-    elif x == 2:
-        endingResultText += f"Third place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
-    else:
-        endingResultText += f"{x}th: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
-for y in range(len(gameData['playerList'])):
-    endingResultText+= f"Not finished: {gameData['playerDict'][gameData['playerList'][y]]['number']}.{gameData['playerDict'][gameData['playerList'][y]]['name']}\n"
-showinfo(title=windowTitles,message =f'{endingResultText}')
+# while len(gameData['playerList']) > 1 and not stopTheGame:
+#     betweenTruns()
+# endingResultText = ''
+# for x in range(len(gameData['statistics']['winOrder'])):
+#     if x == 0:
+#         endingResultText += f"Winner: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+#     elif x == 1:
+#         endingResultText += f"Second place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+#     elif x == 2:
+#         endingResultText += f"Third place: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+#     else:
+#         endingResultText += f"{x}th: {gameData['playerDict'][gameData['statistics']['winOrder'][x]]['number']}.{gameData['playerDict'][gameData['statistics']['winOrder'][x]]['name']}\n"
+# for y in range(len(gameData['playerList'])):
+#     endingResultText+= f"Not finished: {gameData['playerDict'][gameData['playerList'][y]]['number']}.{gameData['playerDict'][gameData['playerList'][y]]['name']}\n"
+# showinfo(title=windowTitles,message =f'{endingResultText}')
 
-bot.run(token=botKey)
+bot.run(token=secretsDict["BotToken"])
