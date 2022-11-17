@@ -77,21 +77,12 @@ bot = commands.Bot(command_prefix="uno!", intents = discord.Intents.all())
 
 @bot.event
 async def on_ready():
-    log("bot is Up and Ready!")
     try:
         synced = await bot.tree.sync()
         log(f"Synched {len(synced)} command(s)")
     except Exception as e:
         log(e, 'error')
-    log("-----------------------------------------------")
-    log(f"Bot logged in as: {bot.user}")
-    log(f"Bot ID: {bot.user.id}")
-    log(f"Version of Discord.py: {discord.__version__}")
-    log(f"Servers: {len(bot.guilds)}")
-    log("    Name: ID")
-    for server in bot.guilds:
-        log(f"    {server.name}: {server.id}")
-    log("-----------------------------------------------")
+    getBotStats(bot)
 
 @bot.tree.command(name="make_server")
 async def make_server(interaction: discord.Interaction, pincode: int = 0):
@@ -117,7 +108,7 @@ async def list_Servers(interaction: discord.Interaction):
         message = f"{message}"
         await interaction.response.send_message(f"{message}", ephemeral=False)
     else:
-        log(f"{interaction.user.mention} is not allowed to list all the servers")
+        log(f"{interaction.user.mention} is not allowed to list all the servers, tried it from {interaction.guild_id}")
         await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
 
 @bot.tree.command(name="stop")
@@ -130,7 +121,7 @@ async def stop(interaction: discord.Interaction):
         else:
             await interaction.response.send_message(f"Hmm yeah that didn't go as planned", ephemeral=False)
     else:
-        log(f"{interaction.user.mention} is not allowed to stop the bot")
+        log(f"{interaction.user.mention} is not allowed to stop the bot, tried it from {interaction.guild_id}")
         await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
 
 @bot.tree.command(name="ping")
@@ -174,7 +165,17 @@ async def help(interaction: discord.Interaction):
 
     await interaction.response.send_message("You asked for help, so here i am!",embed=embed1, view=view1)
 
-    
+def getBotStats(bot):
+    log("bot is Up and Ready!")
+    log("-----------------------------------------------")
+    log(f"Bot logged in as: '{bot.user}'")
+    log(f"Bot ID: {bot.user.id}")
+    log(f"Version of Discord.py: {discord.__version__}")
+    log(f"Servers: {len(bot.guilds)}")
+    log("    Name: ID")
+    for server in bot.guilds:
+        log(f"    {server.name}: {server.id}")
+    log("-----------------------------------------------")
 
 def stringToAscii(seedString:str): #turns everything into ther ASCII value
     seedList = []
