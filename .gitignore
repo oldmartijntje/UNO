@@ -12,6 +12,7 @@ secrets.json
 botData.json
 kladblok.py
 logFiles/
+accounts/
 
 # C extensions
 *.so
