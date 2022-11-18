@@ -1,4 +1,4 @@
-from datetime import datetime
+import datetime
 import os
 import json
 import accounts_omac
@@ -23,18 +23,22 @@ from discord.ui import Button, View
 # needed
 # stalk
 
+# generated variables:
+lastTimeRead = datetime.datetime.now()
+
 logInTerminal = True
 logType = ["all"]
 logFile = 'logFiles/'
 if not os.path.isdir(logFile):
     os.mkdir(logFile)
-logFile = f"{logFile}/log{datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.log"
+logFile = f"{logFile}/log{datetime.datetime.now().strftime('%d_%m_%Y_%H_%M_%S')}.log"
 logF = open(logFile, "w")
 logF.close()
 
 def logging(itemToLog: str = '', type = '', special = ''):
+    global accountData
     if logFile != '':
-        time = datetime.now().strftime(('%d/%m/%Y-%H:%M:%S'))
+        time = datetime.datetime.now().strftime(('%d/%m/%Y-%H:%M:%S'))
         message = f"[{time}] [{type.upper()}] {itemToLog}"
         logF = open(f'{logFile}', "a+")
         logF.write(f'{special}{message}\n')
@@ -57,21 +61,45 @@ def log(logMessage: str = '', typeOfLog: str = 'info'):
         elif typeOfLog == 'needed':
             logging(logMessage, typeOfLog)
 
+timeDelayToRecheck = 90
 userDict = {}
 gamesDict = {}
 serverIdNumber = 1111111
 
 secretsDict = {}
-if os.path.exists(f'secrets.json'):
-    with open(f'secrets.json') as level_json_file:
-        botKey = json.load(level_json_file)
-        if type(botKey) != dict and type(botKey) != list:
-            botKey = json.loads(botKey)
-        secretsDict = botKey
-else:
-    with open(f'secrets.json', 'w') as outfile:
-        json.dump({"BotToken": "", "authorizedUsers": []}, outfile, indent=4)
-    raise ImportError("No \"Bot Token\" provided! Add your \"Bot Token\" to the \"secrets.json\"")
+
+def checkTime():
+    global lastTimeRead
+    timesince = datetime.datetime.now() - lastTimeRead
+    if timesince.total_seconds() > timeDelayToRecheck:
+        log(f"checked time to see if {timesince.total_seconds()}s is more than {timeDelayToRecheck}s (it is)")
+        lastTimeRead = datetime.datetime.now()
+        return True
+    else:
+        log(f"checked time to see if {timesince.total_seconds()}s is more than {timeDelayToRecheck}s (it is not)")
+        return False
+
+def loadSecrets():
+    try:
+        if os.path.exists(f'secrets.json'):
+            with open(f'secrets.json') as level_json_file:
+                botKey = json.load(level_json_file)
+                if type(botKey) != dict and type(botKey) != list:
+                    botKey = json.loads(botKey)
+                secretsDict = botKey
+                log("secrets have been loaded")
+                if secretsDict["BotToken"] == "":
+                    raise ImportError("No \"Bot Token\" provided! Add your \"Bot Token\" to the \"secrets.json\"")
+        else:
+            with open(f'secrets.json', 'w') as outfile:
+                json.dump({"BotToken": "", "authorizedUsers": []}, outfile, indent=4)
+            raise ImportError("No \"Bot Token\" provided! Add your \"Bot Token\" to the \"secrets.json\"")
+    except Exception as e:
+        log(e, "error")
+        exit()
+    return secretsDict
+
+secretsDict = loadSecrets()
 
 bot = commands.Bot(command_prefix="uno!", intents = discord.Intents.all())
 
@@ -95,8 +123,29 @@ async def make_server(interaction: discord.Interaction, pincode: int = 0):
     else:
         await interaction.response.send_message(f"An error accured, please try again.", ephemeral=False)
 
+@bot.tree.command(name="achievement")
+@app_commands.describe(title = "title?")
+@app_commands.describe(description = "description?")
+@app_commands.describe(message = "message?")
+async def achievement(interaction: discord.Interaction, title: str = '', description: str = '', message : str = ''):
+    if title != '' and description != '':
+        if message == '':
+            message = description
+        gotAchievement(title, description, f"{message}, (made by {interaction.user.mention}")
+        log(f"{interaction.user.mention} made an achievement: {title}", "stalk")
+        embed=discord.Embed(title=title, description=description, color=0x15bcf4)
+        embed.add_field(name="Message:", value=message, inline=True)
+        await interaction.response.send_message(f"YEET",embed=embed, ephemeral=False)
+        global accountData
+        accountData = accounts_omac.saveAccount(accountData, configSettings)
+    else:
+        await interaction.response.send_message(f"Not enough data given", ephemeral=False)
+
+
 @bot.tree.command(name="list_servers")
 async def list_Servers(interaction: discord.Interaction):
+    if checkTime():
+        secretsDict = loadSecrets()
     if interaction.user.mention in secretsDict["authorizedUsers"]:
         log(f"{interaction.user.mention} was allowed to list all the servers")
         message = '=====Listed Servers=====\n'
@@ -113,7 +162,12 @@ async def list_Servers(interaction: discord.Interaction):
 
 @bot.tree.command(name="stop")
 async def stop(interaction: discord.Interaction):
+    global secretsDict
+    if checkTime():
+        secretsDict = loadSecrets()
     if interaction.user.mention in secretsDict["authorizedUsers"]:
+        global accountData
+        accountData = accounts_omac.saveAccount(accountData, configSettings)
         log(f"{interaction.user.mention} was allowed to stop the bot")
         if saveFile("botData", {"gamesDict": gamesDict, "userDict": userDict, "serverIdNumber": serverIdNumber}):
             await interaction.response.send_message(f"Oki Doki! Bai Bai!", ephemeral=False)
@@ -123,6 +177,13 @@ async def stop(interaction: discord.Interaction):
     else:
         log(f"{interaction.user.mention} is not allowed to stop the bot, tried it from {interaction.guild_id}")
         await interaction.response.send_message(f"You are not an authorized user!", ephemeral=False)
+
+@bot.tree.command(name="omac")
+async def omac(interaction: discord.Interaction):
+    global accountData
+    accountData = accounts_omac.saveAccount(accountData, configSettings)
+    log(f"{interaction.user.mention} looked at the account data", "stalk")
+    await interaction.response.send_message(f"{accountData}", ephemeral=False)
 
 @bot.tree.command(name="ping")
 async def ping(interaction: discord.Interaction):
@@ -207,11 +268,11 @@ def createServer(data: str = '', pincode: int = 0):
 stopTheGame = False
 
 #app data
-appIDorName = 'UNO3byMarjinIDK'
+appIDorName = 'UNO3byMarjinIDKDiscordBotTesting'
 windowTitles = 'UNO'
 
 #create seed
-seed = accounts_omac.easy.stringToAscii(datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
+seed = accounts_omac.easy.stringToAscii(datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"))
 #if True:
 #    seed = 4852474849475048505044324951585150585154
 random.seed(seed)
@@ -219,24 +280,24 @@ print(seed)
 
 #account login
 configSettings = accounts_omac.configFileTkinter()
-data = accounts_omac.defaultConfigurations.defaultLoadingTkinter(configSettings)
-if data == False:
+accountData = accounts_omac.defaultConfigurations.defaultLoadingTkinter(configSettings)
+if accountData == False:
     exit()
 
-if appIDorName not in data['appData']:
-    data['appData'][appIDorName] = {}
-if appIDorName not in data['collectables']:
-    data['collectables'][appIDorName] = {}
-if appIDorName not in data['achievements']:
-    data['achievements'][appIDorName] = {}
+if appIDorName not in accountData['appData']:
+    accountData['appData'][appIDorName] = {}
+if appIDorName not in accountData['collectables']:
+    accountData['collectables'][appIDorName] = {}
+if appIDorName not in accountData['achievements']:
+    accountData['achievements'][appIDorName] = {}
 
 def accountDataUpdate(thing):
-    global data
-    if thing not in data['appData'][appIDorName]:
-        data['appData'][appIDorName][thing] = 1
+    global accountData
+    if thing not in accountData['appData'][appIDorName]:
+        accountData['appData'][appIDorName][thing] = 1
     else:
-        data['appData'][appIDorName][thing] += 1
-    data = accounts_omac.saveAccount(data, configSettings)
+        accountData['appData'][appIDorName][thing] += 1
+    accountData = accounts_omac.saveAccount(accountData, configSettings)
 
 oopsieErrorCode = '''OOPSIE WOOPSIE!!
 UwU We made a fucky wucky!! A
@@ -267,25 +328,36 @@ gameData = {'playerDict': playerDict,
             'wildInfo': {'played': False, 'chosenColor': 'blue', 'colors': []},
             'statistics': {'winOrder':[]}}
 
+def gotAchievement(title, description, message):
+    global accountData
+    now = datetime.datetime.now()
+    if title not in accountData['achievements'][appIDorName]:
+        accountData = accounts_omac.saveAccount(accountData, configSettings)
+        accountData['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':accountData["time"]}
+        accountData = accounts_omac.saveAccount(accountData, configSettings)
+
 
 ######################## Read if JSON Exists ########################
 
 
 #without this it can't load a json nor create a new json with the cards
-if os.path.isfile(f"gameData/cardsDict.json"):
-    with open(f"gameData/cardsDict.json") as json_file_cardsDict:
-        dataString_cardsDict = json.load(json_file_cardsDict)
-        #this makes it so if u use a json beautifier that makes it not being a string anymore, it would still work
-        if type(dataString_cardsDict) == list:
-            data_cardsDictList = dataString_cardsDict
-        else:
-            data_cardsDictList = json.loads(dataString_cardsDict)
-        data_cardsDict = data_cardsDictList[0]   
-        data_cardsList = data_cardsDictList[1]
-        colorsInJson = data_cardsDictList[2]
-else:
-    raise GeneratorExit("You need to create .json somewhere else")
-
+try:
+    if os.path.isfile(f"gameData/cardsDict.json"):
+        with open(f"gameData/cardsDict.json") as json_file_cardsDict:
+            dataString_cardsDict = json.load(json_file_cardsDict)
+            #this makes it so if u use a json beautifier that makes it not being a string anymore, it would still work
+            if type(dataString_cardsDict) == list:
+                data_cardsDictList = dataString_cardsDict
+            else:
+                data_cardsDictList = json.loads(dataString_cardsDict)
+            data_cardsDict = data_cardsDictList[0]   
+            data_cardsList = data_cardsDictList[1]
+            colorsInJson = data_cardsDictList[2]
+    else:
+        raise ImportError("You need to create playingcards .json files somewhere else")
+except Exception as e:
+    log(e, "error")
+    exit()
 
 ######################## Player Select Menu ########################
 
@@ -534,10 +606,10 @@ def checkIfCardPlayable(selected,mode = True):
                 accountDataUpdate('can\'t play that')
     else:
         showwarning(title=windowTitles,message ='Uno\nYou might want to pick a card')
-        if 'pickACardError' not in data['appData'][appIDorName]:
-            data['appData'][appIDorName]['pickACardError'] = 1
+        if 'pickACardError' not in accountData['appData'][appIDorName]:
+            accountData['appData'][appIDorName]['pickACardError'] = 1
         else:
-            data['appData'][appIDorName]['pickACardError'] += 1
+            accountData['appData'][appIDorName]['pickACardError'] += 1
 
 #who is the next player if you play this car
 def nextPlayer(card = 'NONE'):
