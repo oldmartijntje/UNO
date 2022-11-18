@@ -229,6 +229,65 @@ async def help(interaction: discord.Interaction):
 
     await interaction.response.send_message("You asked for help, so here i am!",embed=embed1, view=view1)
 
+@bot.tree.command(name="kiezer_van_toiletten")
+@app_commands.describe(aantal = "aantal toiletten?")
+async def kiezer_van_toiletten(interaction: discord.Interaction, aantal: int = 0):
+    log(f"{interaction.user.mention} needed to know what toilet to use", "stalk")
+    if aantal == 0:
+        await interaction.response.send_message("vul een aantal in.")
+    else:
+        button1 = Button(label="zijkant", style=discord.ButtonStyle.blurple)
+        button2 = Button(label="voorkant", style=discord.ButtonStyle.blurple)
+        button11 = Button(label="nee", style=discord.ButtonStyle.blurple)
+        button12 = Button(label="ja", style=discord.ButtonStyle.blurple)
+        button21 = Button(label="ja", style=discord.ButtonStyle.blurple)
+        button22 = Button(label="nee", style=discord.ButtonStyle.blurple)
+
+        view1 = View()
+        view1.add_item(button1)
+        view1.add_item(button2)
+
+        view11 = View()
+        view11.add_item(button11)
+        view11.add_item(button12)
+
+        view21 = View()
+        view21.add_item(button21)
+        view21.add_item(button22)
+        async def button_callback1(interaction):
+            log(f"{interaction.user.mention} komt van de zijkant van het toilet", "stalk")
+            await interaction.response.send_message("openen alle deuren richting de zelfde kant?", view=view11)
+        async def button_callback2(interaction):
+            log(f"{interaction.user.mention} komt van de voorkant van het toilet", "stalk")
+            await interaction.response.send_message("staan sommige deuren open?", view=view21)
+        button1.callback = button_callback1
+        button2.callback = button_callback2
+        async def button_callback11(interaction):
+            log(f"{interaction.user.mention} zijn toiletten hebben wisselende deuren", "stalk")
+            await interaction.response.send_message("kies er dan een die richting jou toe openen.\nstaan sommige deuren open?", view=view21)
+        async def button_callback12(interaction):
+            log(f"{interaction.user.mention} zijn toiletten zijn het zelfde", "stalk")
+            await interaction.response.send_message("ja dan moet je er zelf een kiezen")
+        button11.callback = button_callback11
+        button12.callback = button_callback12
+        async def button_callback21(interaction):
+            log(f"{interaction.user.mention} zijn deuren staan open", "stalk")
+            await interaction.response.send_message("kies degene die het minst ver open staat")
+        async def button_callback22(interaction):
+            log(f"{interaction.user.mention} de deuren staan ni open", "stalk")
+            await interaction.response.send_message("ja dan moet je er zelf een kiezen, goodluck")
+        button21.callback = button_callback21
+        button22.callback = button_callback22
+
+        await interaction.response.send_message("van welke kant kom je aangelopen?", view=view1)
+
+        
+
+
+        
+
+    
+
 def getBotStats(bot):
     log("bot is Up and Ready!")
     log("-----------------------------------------------")
