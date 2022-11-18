@@ -335,9 +335,9 @@ def gotAchievement(title, description, message):
     global accountData
     now = datetime.datetime.now()
     if title not in accountData['achievements'][appIDorName]:
-        notLinked = dict(accountData)
+        notLinked = list(accountData["time"])
         accountData = accounts_omac.saveAccount(accountData, configSettings)
-        accountData['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':notLinked["time"]}
+        accountData['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':notLinked}
         accountData = accounts_omac.saveAccount(accountData, configSettings)
 
 
