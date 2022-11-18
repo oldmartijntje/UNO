@@ -129,15 +129,18 @@ async def make_server(interaction: discord.Interaction, pincode: int = 0):
 @app_commands.describe(message = "message?")
 async def achievement(interaction: discord.Interaction, title: str = '', description: str = '', message : str = ''):
     if title != '' and description != '':
-        if message == '':
-            message = description
-        gotAchievement(title, description, f"{message}, (made by <{interaction.user.mention.split('@')[1]}")
-        log(f"{interaction.user.mention} made an achievement: '{title}', '{description}', '{message}'", "stalk")
-        embed=discord.Embed(title=title, description=description, color=0x15bcf4)
-        embed.add_field(name="Message:", value=message, inline=True)
-        await interaction.response.send_message(f"YEET",embed=embed, ephemeral=False)
-        global accountData
-        accountData = accounts_omac.saveAccount(accountData, configSettings)
+        if (message == '' and len(title) + (len(title)*2) > 50) or len(title) + len(title) + len(message) > 50:
+            await interaction.response.send_message(f"Too many characters", ephemeral=False)
+        else:
+            if message == '':
+                message = description
+            gotAchievement(title, description, f"{message}, (made by <{interaction.user.mention.split('@')[1]}")
+            log(f"{interaction.user.mention} made an achievement: '{title}', '{description}', '{message}'", "stalk")
+            embed=discord.Embed(title=title, description=description, color=0x15bcf4)
+            embed.add_field(name="Message:", value=message, inline=True)
+            await interaction.response.send_message(f"YEET",embed=embed, ephemeral=False)
+            global accountData
+            accountData = accounts_omac.saveAccount(accountData, configSettings)
     else:
         await interaction.response.send_message(f"Not enough data given", ephemeral=False)
 
@@ -332,8 +335,9 @@ def gotAchievement(title, description, message):
     global accountData
     now = datetime.datetime.now()
     if title not in accountData['achievements'][appIDorName]:
+        notLinked = dict(accountData)
         accountData = accounts_omac.saveAccount(accountData, configSettings)
-        accountData['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':accountData["time"]}
+        accountData['achievements'][appIDorName][title] = {'title':title, 'description': description, 'message': message, 'date': now.strftime("%m/%d/%Y, %H:%M:%S"), 'timePlayedWhen':notLinked["time"]}
         accountData = accounts_omac.saveAccount(accountData, configSettings)
 
 
