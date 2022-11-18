@@ -46,6 +46,17 @@ def logging(itemToLog: str = '', type = '', special = ''):
         if logInTerminal:
             print(f'{message}')
 
+def loadJson(file):
+    if os.path.exists(f'{file}.json'):
+        with open(f'{file}.json') as level_json_file:
+            fileContent = json.load(level_json_file)
+            if type(fileContent) != dict and type(fileContent) != list:
+                fileContent = json.loads(fileContent)
+            log(f"{file}.json have been loaded")
+            return fileContent
+    else:
+        return False
+
 def log(logMessage: str = '', typeOfLog: str = 'info'):
     if logMessage != '' and "none" not in logType:
         if typeOfLog == 'info' and 'all' in logType:
