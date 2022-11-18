@@ -132,7 +132,7 @@ async def achievement(interaction: discord.Interaction, title: str = '', descrip
         if message == '':
             message = description
         gotAchievement(title, description, f"{message}, (made by {interaction.user.mention}")
-        log(f"{interaction.user.mention} made an achievement: {title}", "stalk")
+        log(f"{interaction.user.mention} made an achievement: '{title}', '{description}', '{message}'", "stalk")
         embed=discord.Embed(title=title, description=description, color=0x15bcf4)
         embed.add_field(name="Message:", value=message, inline=True)
         await interaction.response.send_message(f"YEET",embed=embed, ephemeral=False)
