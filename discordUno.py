@@ -126,13 +126,13 @@ async def on_ready():
 @bot.tree.command(name="make_server")
 async def make_server(interaction: discord.Interaction, pincode: int = 0):
     log(f"{interaction.user.mention} tries to make a server with pincode: {pincode}", "stalk")
-    if createServer(interaction, pincode):
+    if createServer(interaction, pincode) == True:
         if pincode == 0:
             await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nNo Pincode", ephemeral=False)
         else:
             await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nPincode: {gamesDict[userDict[interaction.user.mention]['server']]['passcode']}", ephemeral=False)
     else:
-        await interaction.response.send_message(f"An error accured, please try again.", ephemeral=False)
+        await interaction.response.send_message(f"You are already in a server, leave that one first", ephemeral=False)
 
 @bot.tree.command(name="achievement")
 @app_commands.describe(title = "title?")
@@ -292,12 +292,18 @@ async def kiezer_van_toiletten(interaction: discord.Interaction, aantal: int = 0
 
         await interaction.response.send_message("van welke kant kom je aangelopen?", view=view1)
 
-        
-
-
-        
-
-    
+@bot.tree.command(name="join")
+@app_commands.describe(id = "Server ID")
+@app_commands.describe(pincode = "Pincode (0 if none)")
+async def join(interaction: discord.Interaction, id, pincode: int = 0):
+    log(f"{interaction.user.mention} tries to join the server {id} server with pincode: {pincode}", "stalk")
+    if joinServer(interaction, id, pincode) == True:
+        if pincode == 0:
+            await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nNo Pincode", ephemeral=False)
+        else:
+            await interaction.response.send_message(f"Server created!\nServer ID: {userDict[interaction.user.mention]['server']}\nPincode: {gamesDict[userDict[interaction.user.mention]['server']]['passcode']}", ephemeral=False)
+    else:
+        await interaction.response.send_message(f"You are already in a server, leave that one first", ephemeral=False)    
 
 def getBotStats(bot):
     log("bot is Up and Ready!")
@@ -319,23 +325,72 @@ def stringToAscii(seedString:str): #turns everything into ther ASCII value
     seed = int(seedString)
     return seed
 
+def loadMakeJson(file, data):
+    if os.path.exists(f'{file}.json'):
+        with open(f'{file}.json') as level_json_file:
+            data = json.load(level_json_file)
+            if type(data) != dict and type(data) != list:
+                data = json.loads(data)
+        return data
+    else:
+        return saveFile(file, data)
+
 def saveFile(file, data):
     log(f"{file}.json has been saved", "modify")
     with open(f'{file}.json', 'w') as outfile:
         json.dump(data, outfile, indent=4)
     return True
 
-def createServer(data: str = '', pincode: int = 0):
-    global userDict, gamesDict, serverIdNumber
+
+botSettings = loadMakeJson('botSettings', {"serverWhitelist": False, "whitelistedServers": []})
+gameServerData = loadMakeJson('botData', {"gamesDict": {}, "userDict": {}, "serverIdNumber": 1111111})
+serverIdNumber = gameServerData["serverIdNumber"]
+gamesDict = gameServerData["gamesDict"]
+userDict = gameServerData["userDict"]
+
+def getNewServerId():
+    global gamesDict, serverIdNumber
     while f"{serverIdNumber}" in gamesDict:
         serverIdNumber += 1
     serverId = f"{serverIdNumber}"
-    gamesDict[f"{serverId}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+    return serverId
+
+def joinServer(data, server, pin):
+    global userDict, gamesDict, serverIdNumber
+    if server in gamesDict:
+        pass
+        # if data.user.mention in userDict and "server" in userDict[data.user.mention]:
+        #     if userDict[data.user.mention]["server"] != "NONE":
+        #         log(f"{data.user.mention} tried making a server when it's already connected to {userDict[data.user.mention]['server']}", "debug")
+        #         return False
+        #     else:
+        #         value = getNewServerId()
+        #         userDict[data.user.mention]["server"] = f"{value}"
+        #         gamesDict[f"{value}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+        # else:
+        #     value = getNewServerId()
+        #     userDict[data.user.mention] = {"server":f"{value}"}
+        #     gamesDict[f"{value}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+        # log(f"{data.user.mention} is now linked to a server: {value}", "debug")
+        # return True
+
+def createServer(data: str = '', pincode: int = 0):
+    global userDict, gamesDict, serverIdNumber
+    
+    
     if data.user.mention in userDict and "server" in userDict[data.user.mention]:
-        userDict[data.user.mention]["server"] = f"{serverId}"
+        if userDict[data.user.mention]["server"] != "NONE":
+            log(f"{data.user.mention} tried making a server when it's already connected to {userDict[data.user.mention]['server']}", "debug")
+            return False
+        else:
+            value = getNewServerId()
+            userDict[data.user.mention]["server"] = f"{value}"
+            gamesDict[f"{value}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
     else:
-        userDict[data.user.mention] = {"server":f"{serverId}"}
-    log(f"{data.user.mention} is now linked to a server: {serverId}", "debug")
+        value = getNewServerId()
+        userDict[data.user.mention] = {"server":f"{value}"}
+        gamesDict[f"{value}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+    log(f"{data.user.mention} is now linked to a server: {value}", "debug")
     return True
 
 stopTheGame = False
