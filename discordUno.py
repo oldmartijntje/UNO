@@ -358,15 +358,14 @@ def getNewServerId():
 def joinServer(data, server, pin):
     global userDict, gamesDict, serverIdNumber
     if server in gamesDict:
-        pass
-        # if data.user.mention in userDict and "server" in userDict[data.user.mention]:
-        #     if userDict[data.user.mention]["server"] != "NONE":
-        #         log(f"{data.user.mention} tried making a server when it's already connected to {userDict[data.user.mention]['server']}", "debug")
-        #         return False
-        #     else:
-        #         value = getNewServerId()
-        #         userDict[data.user.mention]["server"] = f"{value}"
-        #         gamesDict[f"{value}"] = {"host": data.user.mention, "passcode": pincode, "players": {data.user.mention : 'player1'}}
+        
+        if data.user.mention in userDict and "server" in userDict[data.user.mention]:
+            if userDict[data.user.mention]["server"] != "NONE":
+                log(f"{data.user.mention} tried joining the server {data} when it's already connected to {userDict[data.user.mention]['server']}", "debug")
+                return [False, "You are already connected to another server"]
+            else:
+                userDict[data.user.mention]["server"] = f"{server}"
+                gamesDict[f"{server}"]["players"][data.user.mention] = f'{len(list(gamesDict[f"{server}"]["players"].keys()))}'
         # else:
         #     value = getNewServerId()
         #     userDict[data.user.mention] = {"server":f"{value}"}
