@@ -1,0 +1,88 @@
+[
+    {
+        "rememberFromPlayers": {
+            "front": 1,
+            "back": 2
+        },
+        "rememberAmountPerPlayer": {
+            "turnsHistory": 10,
+            "grabbedCardsWhenActiveCard": 10
+        },
+        "rememberPileHistory": {
+            "amountOfCards": 10,
+            "calculateRemainingCardsPossabilities": {
+                "enabled": true,
+                "whenAmountOfCardsLeft": 10,
+                "refreshWhenReshuffle": true
+            }
+        },
+        "disadvantages": {
+            "randomForget": {
+                "enabled": true,
+                "chance": 0.1,
+                "types": [
+                    "turnsHistory",
+                    "grabbedCardsWhenActiveCard",
+                    "pileHistory"
+                ]
+            },
+            "warpMemoriesOfCards": {
+                "enabled": true,
+                "chance": 0.1,
+                "types": [
+                    "turnsHistory",
+                    "grabbedCardsWhenActiveCard",
+                    "pileHistory"
+                ]
+            }
+        },
+        "advantages": {
+            "cheats": {
+                "enabled": true,
+                "types": [
+                    "seePileHistory",
+                    "seeLeftCards",
+                    "seePlayerHands",
+                    "allowMinusCards"
+                ]
+            }
+        },
+        "logic": {
+            "enabled": true,
+            "UseRandomForRange": 0,
+            "pointsCalculation": {
+                "pointsForNotPlayableCards": -69420,
+                "beingAbleToPlay": 2,
+                "grabCard": 1,
+                "bullyWinningPerson": {
+                    "skipWinner": 4,
+                    "grabWinner": {
+                        "baseNumber": 3,
+                        "plusNumberCounting": true
+                    },
+                    "skipToBetterWinner": 0,
+                    "reverseFromWinner": 4,
+                    "reverseToBetterWinner": 0
+                },
+                "bullyRandomPerson": {
+                    "skip": 3,
+                    "grab": {
+                        "baseNumber": 2,
+                        "plusNumberCounting": true
+                    },
+                    "skipToBetter": 0,
+                    "reverse": 3,
+                    "reverseToBetter": 0
+                },
+                "wildCard": {
+                    "whenActiveColorIsGood": 1,
+                    "whenKnowNextPlayerHasActiveColor": 1.5,
+                    "whenActiveColorIsBad": 3,
+                    "whenKnowNextPlayerHasBadColor": 0
+                },
+                "mostAmountOfThisColor": 1,
+                "perPlayerThatProbablyCantPlayAfterThis": 2
+            }
+        }
+    }
+]
