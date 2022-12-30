@@ -34,6 +34,10 @@
                     "grabbedCardsWhenActiveCard",
                     "pileHistory"
                 ]
+            },
+            "AutoDrawAt": {
+                "enabled": true,
+                "amountOfCardsLeft": 1
             }
         },
         "advantages": {
